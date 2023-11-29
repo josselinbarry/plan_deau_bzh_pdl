@@ -18,6 +18,8 @@ library(sf)
 #library(stringi)
 library(units)
 
+source(file = "R/sommer_surfaces_dans_polygone.R")
+
 # Import des données ----
 
 sages <- sf::read_sf(dsn = "data/sages_zone_etude.gpkg") %>%
@@ -346,6 +348,18 @@ surf_pe_tot_sage <- pe_decoup_sage %>%
   select(nom_sage, # sélection des variables à conserver
          surface_pe_tot) 
 
+surf_pe_tot_sage_test <-
+  sommer_surfaces_dans_polygone(
+    couche_surface = pe_decoup_sage %>% units::drop_units(),
+    var_id_polygone = nom_sage,
+    var_a_sommer = surface_intersect,
+    var_somme_surfaces = surf_pe_tot,
+    zone_marais_incluse = TRUE,
+    seulement_permanent = FALSE
+  )
+
+
+
 surf_pehm_tot_sage <- pe_decoup_sage %>% 
   filter(zone_marais == 0) %>%
   group_by(nom_sage) %>%
@@ -450,3 +464,8 @@ save(centroides_pe_qualifies2,
 load(file = "data/outputs/w_territoires.RData")
 load(file = "data/outputs/w_territoires2.RData")
 load(file = "data/outputs/w_plando1.RData")
+load(file = "data/outputs/w_plando2.RData")
+
+troncons_topage_plus_proches <-
+  sf::read_sf(dsn = "data/outputs/troncons_topage_plus_proches.gpkg")
+

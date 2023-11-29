@@ -421,6 +421,18 @@ troncons_topage_plus_proches <- troncons_topage_plus_proches %>%
   ungroup() %>%
   unique()
 
+troncons_topage_plus_proches_vf <- troncons_topage_plus_proches %>%
+  group_by(cdoh_plando) %>%
+  slice(1)
+
+id_pe_sans_topage <- setdiff(pe$cdoh_plando, 
+                             troncons_topage_plus_proches_vf$cdoh_plando)
+
+pe %>% 
+  filter(cdoh_plando %in% id_pe_sans_topage) %>% 
+  units::drop_units() %>%
+  mapview::mapview()
+
 sf::write_sf(obj = troncons_topage_plus_proches, dsn = "data/outputs/troncons_topage_plus_proches.gpkg")
 
 
