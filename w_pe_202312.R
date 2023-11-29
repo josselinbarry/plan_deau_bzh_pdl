@@ -447,4 +447,6 @@ save(centroides_pe_qualifies2,
 
 # chargement des résultats
 
-load(file = "outputs/w_territoires.RData")
+load(file = "data/outputs/w_territoires.RData")
+load(file = "data/outputs/w_territoires2.RData")
+load(file = "data/outputs/w_plando1.RData")
