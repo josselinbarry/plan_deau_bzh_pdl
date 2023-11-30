@@ -39,7 +39,7 @@ surface_elementaire <-
   st_transform(crs = 2154)
 
 pe <-
-  sf::read_sf(dsn = "data/outputs/pe_qualifiees_20231128.gpkg")
+  sf::read_sf(dsn = "data/outputs/pe_qualifies_20231131.gpkg")
 
 estran <-
   sf::read_sf(dsn = "data/BDTOPO_V3_zone_estran.gpkg") %>%
@@ -66,6 +66,7 @@ qa <- sf::read_sf(dsn = "data/qa_zone_etude.gpkg") %>%
 
 q5 <- sf::read_sf(dsn = "data/q5_zone_etude.gpkg") %>%
   select(ID_BDCARTH, Q5BASN, Q5MOY_MN, Q5HAUN) %>%
+  mutate(ID_BDCARTH = as.character(ID_BDCARTH)) %>%
   st_transform(crs = 2154)
 
 ce_topage <- sf::read_sf(dsn = "data/TronconHydrographique_Bretagne_Pays_de_la_Loire_non_aqueduc_strahler.gpkg") %>% 
@@ -194,12 +195,22 @@ charm_86 <- sf::read_sf(dsn = "data/charm_86.gpkg") %>%
   mutate(geol = DESCR) %>%
   select(geol)
 
+zhp <- sf::read_sf(dsn = "data/pe_zhp.gpkg") %>%
+  st_drop_geometry() %>%
+  select(cdoh_plando, zhp)
+
+nappe_charm <-
+  sf::read_sf(dsn = "data/nappe_charm.gpkg") %>%
+  mutate(nappe_charm = 1)
+  
 # Fusion des bd_charm de la zone d'étude ----
 
 charm_zone_etude <- 
   dplyr::bind_rows(
     charm_17,charm_22,charm_28,charm_29,charm_35,charm_37,charm_41,charm_44,charm_45,charm_49,charm_50,charm_53,charm_56,charm_61,charm_72,charm_79,charm_85,charm_86)
   
+sf::write_sf(obj = charm_zone_etude, dsn = "data/outputs/charm_zone_etude_20231130.gpkg")
+
 # Préparation préalable de la couche plan d'eau (pe) ----
 
 ## Ajouts et qualification (0/1) de l'attribut "bassin_orage" ----
@@ -373,7 +384,18 @@ troncons_plus_proches <- troncons_plus_proches %>%
   ungroup() %>%
   unique()
 
+troncons_carthage_plus_proche <- troncons_carthage_plus_proche %>%
+  group_by(cdoh_plando) %>%
+  slice(1) 
+
+troncons_carthage_plus_proche2 <- troncons_carthage_plus_proche %>%
+  left_join(y = q5 %>% mutate(ID_BDCARTH = as.character(ID_BDCARTH)) %>% st_drop_geometry(),
+            by = c("ID_BDCARTH" = "ID_BDCARTH"), relationship = 'many-to-many')
+
 sf::write_sf(obj = troncons_plus_proches, dsn = "data/outputs/troncons_carthage_plus_proches.gpkg")
+
+troncons_carthage_plus_proche <-
+  sf::read_sf(dsn = "data/outputs/troncons_carthage_plus_proches.gpkg")
 
 qa <- qa %>%
   st_drop_geometry() %>%
@@ -421,33 +443,23 @@ troncons_topage_plus_proches <- troncons_topage_plus_proches %>%
   ungroup() %>%
   unique()
 
-troncons_topage_plus_proches_vf <- troncons_topage_plus_proches %>%
+troncons_topage_plus_proche <- troncons_topage_plus_proche %>%
   group_by(cdoh_plando) %>%
   slice(1)
 
-id_pe_sans_topage <- setdiff(pe$cdoh_plando, 
-                             troncons_topage_plus_proches_vf$cdoh_plando)
+#id_pe_sans_topage <- setdiff(pe$cdoh_plando, 
+#                             troncons_topage_plus_proches_vf$cdoh_plando)
 
-pe %>% 
-  filter(cdoh_plando %in% id_pe_sans_topage) %>% 
-  units::drop_units() %>%
-  mapview::mapview()
+#pe %>% 
+#  filter(cdoh_plando %in% id_pe_sans_topage) %>% 
+#  units::drop_units() %>%
+
+mapview::mapview()
 
 sf::write_sf(obj = troncons_topage_plus_proches, dsn = "data/outputs/troncons_topage_plus_proches.gpkg")
 
-
-pe <- pe %>%
-  left_join(y = troncons_topage_plus_proches, join_by(cdoh_plando == cdoh_plando))
-
-ce_topage <- ce_topage %>%
-  select(cdoh_ce, NatureTH, persistance_ce, StreamOrde) %>%
-  st_drop_geometry()
-
-pe <- pe %>%
-  left_join(y = ce_topage, join_by(cdoh_ce == cdoh_ce), relationship = 'many-to-many')
-
-sf::write_sf(obj = pe, dsn = "data/outputs/pe_qualifiees_20231123.gpkg")
-
+troncons_topage_plus_proche <-
+  sf::read_sf(dsn = "data/outputs/troncons_topage_plus_proches.gpkg")
 
 # Calcul des distances à la source topage ----
 
@@ -478,79 +490,78 @@ source_plus_proche <- source_plus_proche %>%
   ungroup() %>%
   unique()
 
+source_plus_proche <- source_plus_proche %>%
+  group_by(cdoh_plando) %>%
+  slice(1)
+
 sf::write_sf(obj = source_plus_proche, dsn = "data/outputs/sources_plus_proches.gpkg")
 
+source_plus_proche <-
+  sf::read_sf(dsn = "data/outputs/sources_plus_proches.gpkg")
+
+# Jointure des troncons et source plus proche à la couche pe ----
+
+pe <- pe %>%
+  left_join(troncons_topage_plus_proche,
+            by = c("cdoh_plando" = "cdoh_plando")) %>%
+  left_join(troncons_carthage_plus_proche,
+            by = c("cdoh_plando" = "cdoh_plando")) %>%
+  left_join(source_plus_proche,
+            by = c("cdoh_plando" = "cdoh_plando"))
 
 # Ajouts et qualification de l'attribut "SAGE" ----
 
-pe_sages <- pe %>% 
-  st_intersection(sages) %>% # découpage des plando selon les masses d'eau
-  mutate(surface_intersect = st_area(.)) %>% # superficie des intersects
-  st_drop_geometry() %>% 
-  select(cdoh_plando,  # sélection des variables à conserver
-         nom_sage,
-         surface_m2,
-         surface_intersect) %>% 
-  mutate(pc_plando_sur_sage = surface_intersect / surface_m2)
-
-affectation_sage <- pe_sages %>% 
-  group_by(cdoh_plando) %>%  # groupement pour chaque plan d'eau selon leur gid
-  filter(pc_plando_sur_sage == max(pc_plando_sur_sage)) %>% # pourcentage maxi
-  ungroup() %>% 
+sage_par_pe <- pe_decoup_sage %>%
+  select(-starts_with("longueur"), -starts_with("surface")) %>%
+  sf::st_drop_geometry()%>%
+  group_by(cdoh_plando) %>%
+  summarise(nom_sage = paste(unique(nom_sage), collapse = ', ')) %>% 
   select(cdoh_plando, nom_sage)
 
-sf::write_sf(obj = affectation_sage, dsn = "data/outputs/affectation_sage_20231123.gpkg")
+sf::write_sf(obj = sage_par_pe, dsn = "data/outputs/sage_par_pe_20231130.gpkg")
 
 # Ajouts et qualification de l'attribut "ME" ----
 
-pe_me <- pe %>% 
-  st_intersection(bv_me) %>% # découpage des plando selon les masses d'eau
-  mutate(surface_intersect = st_area(.)) %>% # superficie des intersects
-  st_drop_geometry() %>% 
-  select(cdoh_plando,  # sélection des variables à conserver
-         cdeumassed,
-         nombvspemd,
-         surface_m2,
-         surface_intersect) %>% 
-  mutate(pc_plando_sur_me = surface_intersect / surface_m2)
+me_par_pe <- pe_decoup_me %>%
+  select(-starts_with("longueur"), -starts_with("surface")) %>%
+  sf::st_drop_geometry()%>%
+  group_by(cdoh_plando) %>%
+  summarise(cd_me = paste(unique(cdeumassed), collapse = ', ')) %>% 
+  select(cdoh_plando, cd_me)
 
-affectation_me <- pe_me %>% 
-  group_by(cdoh_plando) %>%  # groupement pour chaque plan d'eau selon leur gid
-  filter(pc_plando_sur_me == max(pc_plando_sur_me)) %>% # pourcentage maxi
-  ungroup() %>%
-  select(cdoh_plando, cdeumassed, nombvspemd)
-
-sf::write_sf(obj = affectation_me, dsn = "data/outputs/affectation_me_20231123.gpkg")
+sf::write_sf(obj = me_par_pe, dsn = "data/outputs/me_par_pe_20231130.gpkg")
 
 # Ajouts et qualification de l'attribut "commune" ----
 
-pe_communes <- pe %>% 
-  st_intersection(communes) %>% # découpage des PE selon les communes
-  mutate(surface_intersect = st_area(.)) %>% # superficie des intersects
-  st_drop_geometry() %>% 
-  select(cdoh_plando,  # sélection des variables à conserver
-         code_insee,
-         nom_com,
-         insee_dep,
-         surface_m2,
-         surface_intersect) %>% 
-  mutate(pc_plando_sur_comm = surface_intersect / surface_m2)
+commune_par_pe <- pe_decoup_com %>% 
+  select(-starts_with("longueur"), -starts_with("surface")) %>%
+  sf::st_drop_geometry()%>%
+  group_by(cdoh_plando) %>%
+  summarise(nom_communes = paste(unique(nom_com), collapse = ', ')) %>%
+  select(cdoh_plando, nom_communes)
 
-affectation_com <- pe_communes %>% 
-  group_by(cdoh_plando) %>%  # groupement pour chaque plan d'eau selon leur gid
-  filter(pc_plando_sur_comm == max(pc_plando_sur_comm)) %>% # pourcentage maxi
-  ungroup() %>%
-  select(cdoh_plando, code_insee, nom_com)
+# Jointure des sage, me et communes à la couche pe ----
 
-sf::write_sf(obj = affectation_com, dsn = "data/outputs/affectation_com_20231123.gpkg")
+pe <- pe %>%
+  left_join(sage_par_pe,
+            by = c("cdoh_plando" = "cdoh_plando")) %>%
+  left_join(me_par_pe,
+            by = c("cdoh_plando" = "cdoh_plando")) %>%
+  left_join(commune_par_pe,
+            by = c("cdoh_plando" = "cdoh_plando"))
+
+sf::write_sf(obj = pe, dsn = "data/outputs/pe_qualifies_20231131.gpkg")
 
 
 # Sauvegarde 2 ----
 
 save(pe,
-     troncons_plus_proches,
-     troncons_topage_plus_proches, 
+     troncons_carthage_plus_proche,
+     troncons_topage_plus_proche, 
      source_plus_proche,
+     sage_par_pe,
+     commune_par_pe,
+     me_par_pe,
      file = "data/outputs/w_plando2.RData")
 
 # Jointure des prélèvements ----
@@ -597,7 +608,7 @@ sf::write_sf(obj = centroides_pe_qualifies, dsn = "data/outputs/centroides_pe_li
 
 # Jointure de la géologie BD Charm ----
 
-centroides_pe_qualifies2 <- centroides_pe_qualifies %>%
+centroides_pe_qualifies <- centroides_pe_qualifies %>%
   st_join(charm_zone_etude) %>% 
   mutate(geologie = geol) %>%
   select(-geol) %>%
@@ -605,7 +616,7 @@ centroides_pe_qualifies2 <- centroides_pe_qualifies %>%
 
 ## Recherche des codes geol manquants ----
 
-pe_sans_cd_geol <- centroides_pe_qualifies2 %>%
+pe_sans_cd_geol <- centroides_pe_qualifies %>%
   filter(geologie == '' | is.na(geologie)) 
 
 plus_proche_geol <- sf::st_nearest_feature(x = pe_sans_cd_geol,
@@ -628,7 +639,7 @@ cd_geol <- pe_sans_cd_geol %>%
 
 # Très long (env. 2h)
 
-centroides_pe_qualifies2 <- centroides_pe_qualifies2  %>%
+centroides_pe_qualifies <- centroides_pe_qualifies  %>%
   left_join(cd_geol, by = c("cdoh_plando" = "cdoh_plando")) %>%  
   mutate(geologie = ifelse(
     geologie == '' | is.na(geologie),
@@ -637,27 +648,50 @@ centroides_pe_qualifies2 <- centroides_pe_qualifies2  %>%
   distinct() %>%
   select(-geol_la_plus_proche, -distance2_m) 
 
+sf::write_sf(obj = centroides_pe_qualifies, dsn = "data/outputs/centroides_pe_geologie.gpkg")
+
+# Jointure de la lithologie simplifiée ----
+
+pe <- pe %>%
+  left_join(centroides_pe_qualifies %>% sf::st_drop_geometry(),
+            by = c("cdoh_plando" = "cdoh_plando"))
+
+sf::write_sf(obj = pe, dsn = "data/outputs/pe_qualifies_20231131.gpkg")
+
 # Ajouts et qualification de l'attribut "zhp" ----
 
+pe <- pe %>%
+  left_join(zhp,
+            by = c("cdoh_plando" = "cdoh_plando"))
 
-# Ajouts et qualification de l'attribut "nappe" ----
+# Ajouts et qualification de l'attribut "connecte" ----
 
-ce_nappe_1 <- ce_topage %>%
-  filter(StreamOrde == 1) %>%
-  st_buffer(dist = 25)
+## Ajouts et qualification de l'attribut "connecte_nappe" ----
 
-ce_nappe_2 <- ce_topage %>%
-  filter(StreamOrde == 2) %>%
-  st_buffer(dist = 50)
+pe2 <- pe %>%
+  st_join(nappe_charm) %>% 
+  mutate(connecte_nappe = case_when(
+    !is.na(nappe_charm) ~ '1',
+    is.na(nappe_charm) ~ '0')) %>%
+  distinct()
 
-ce_nappe_3 <- ce_topage %>%
-  filter(StreamOrde == 3) %>%
-  st_buffer(dist = 75)
+pe2 <- pe2 %>%
+  group_by(cdoh_plando) %>%
+  summarise(connecte_nappe = max (connecte_nappe))
 
-buffer_ce_nappe  <- 
-  st_union(dplyr::bind_rows(ce_nappe_1, ce_nappe_2, ce_nappe_3))
+## Ajouts et qualification de l'attribut "connecte_source" ----
 
-sf::write_sf(obj = buffer_ce_nappe, dsn = "data/outputs/buffer_ce_nappe.gpkg")
+pe <- pe %>%
+  mutate(connecte_source = case_when(
+    distance_source <= 50 ~ '1',
+    is.na(distance_source)| distance_source > 50 ~ '0')) 
+
+## Ajouts et qualification de l'attribut "connecte_rh" ----
+
+pe <- pe %>%
+  mutate(connecte_rh = case_when(
+    !is.na(longueur_topage_intersecte) ~ '1',
+    is.na(longueur_topage_intersecte) ~ '0')) 
 
 # Jointure des résultats à la couche PE ----
 
@@ -676,5 +710,4 @@ sf::write_sf(obj = pe_cd_topage, dsn = "data/outputs/pe_cd_topage.gpkg")
 
 # Jointure des prélèvements ----
 
-# Jointure de la probabilité de zh ----
 
