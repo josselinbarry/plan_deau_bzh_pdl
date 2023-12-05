@@ -39,7 +39,7 @@ surface_elementaire <-
   st_transform(crs = 2154)
 
 pe <-
-  sf::read_sf(dsn = "data/outputs/pe_qualifies_20231131.gpkg")
+  sf::read_sf(dsn = "data/outputs/pe_qualifies_20231200.gpkg")
 
 estran <-
   sf::read_sf(dsn = "data/BDTOPO_V3_zone_estran.gpkg") %>%
@@ -202,6 +202,21 @@ zhp <- sf::read_sf(dsn = "data/pe_zhp.gpkg") %>%
 nappe_charm <-
   sf::read_sf(dsn = "data/nappe_charm.gpkg") %>%
   mutate(nappe_charm = 1)
+
+prelevements <- st_read("data/Prel_DIR2_total_2008_2016.gpkg") %>% # ou .shp ou en .RData 
+  st_transform(crs = 2154)
+
+roe_lb <- data.table::fread(file = "data/lb_temp20230402.csv",
+                            encoding = "Latin-1",
+                            colClasses = c("date_creation" = "character"))
+
+roe_sn <- data.table::fread(file = "data/sn_temp20230402.csv",
+                            encoding = "Latin-1",
+                            colClasses = c("date_creation" = "character"))
+
+roe_nr <- data.table::fread(file = "data/nr_temp20230402.csv",
+                            encoding = "Latin-1",
+                            colClasses = c("date_creation" = "character"))
   
 # Fusion des bd_charm de la zone d'étude ----
 
@@ -566,6 +581,73 @@ save(pe,
 
 # Jointure des prélèvements ----
 
+#points_prelev_ssdoubles3 <- prelevements %>% 
+#  group_by(num_prelev) %>% 
+#  summarise(prel_2008_tot = sum(X2008_1),
+#            prel_2009_tot = sum(X2009_1),
+#            prel_2010_tot = sum(X2010_1),
+#            prel_2011_tot = sum(X2011_1),
+#            prel_2012_tot = sum(X2012_1),
+#            prel_2013_tot = sum(X2013_1),
+#            prel_2014_tot = sum(X2014_1),
+#            prel_2015_tot = sum(X2015_1),
+#            prel_2016_tot = sum(X2016_1),
+#            rais_soc = first(Rais_soc),
+#            DPRT = first(DPRT),
+#            INSEE = first(INSEE_com),
+#            num_prelev = first(num_prelev),
+#            num_SIREN = first(Num_SIREN),
+#            code_NIC = first(Code_Nic),
+#            code_Nace = first(Code_Nace),
+#            lib_nace = first(Lib_Nace),
+#            num_compt = first(num_compt),
+#            lib_compt = first(lib_compt),
+#            typ_coord = first(typ_coord),
+#            nat_capt = first(nat_capt))
+
+sf::write_sf(obj = points_prelev_ssdoubles, dsn = "data/outputs/points_prelev_ssdoubles.gpkg")
+
+plus_proche_pe <- sf::st_nearest_feature(x = prelevements,
+                                         y = pe)
+
+distance_prelevement <- st_distance(prelevements,
+                    pe[plus_proche_pe,],
+                    by_element = TRUE)
+
+pe_prelev <- prelevements %>% 
+  cbind(distance_prelevement) %>% 
+  cbind(pe[plus_proche_pe,]) %>% 
+  st_drop_geometry() %>% 
+  mutate(distance_prelevement = round(dist_prelevement)) %>%
+  units::drop_units()
+
+pe_prelev_unique <- pe_prelev %>%
+  filter(distance_prelevement <= 20) %>%
+  group_by(cdoh_plando) %>%
+  summarise(prel_2008_tot = sum(X2008_1),
+            prel_2009_tot = sum(X2009_1),
+            prel_2010_tot = sum(X2010_1),
+            prel_2011_tot = sum(X2011_1),
+            prel_2012_tot = sum(X2012_1),
+            prel_2013_tot = sum(X2013_1),
+            prel_2014_tot = sum(X2014_1),
+            prel_2015_tot = sum(X2015_1),
+            prel_2016_tot = sum(X2016_1))%>%
+  select(cdoh_plando,
+         prel_2008_tot, 
+         prel_2009_tot,
+         prel_2010_tot,
+         prel_2011_tot,
+         prel_2012_tot,
+         prel_2013_tot,
+         prel_2014_tot,
+         prel_2015_tot,
+         prel_2016_tot) %>%
+  sf::st_drop_geometry() %>%
+  units::drop_units()
+  
+pe <- pe %>% 
+  left_join(y = pe_prelev_unique)
 
 # Jointure de la lithologie simplifiée ----
 
@@ -668,46 +750,76 @@ pe <- pe %>%
 
 ## Ajouts et qualification de l'attribut "connecte_nappe" ----
 
-pe2 <- pe %>%
-  st_join(nappe_charm) %>% 
+pe <- pe %>%
+  st_join(nappe_charm, 
+          largest = T) %>% 
   mutate(connecte_nappe = case_when(
     !is.na(nappe_charm) ~ '1',
     is.na(nappe_charm) ~ '0')) %>%
-  distinct()
-
-pe2 <- pe2 %>%
-  group_by(cdoh_plando) %>%
-  summarise(connecte_nappe = max (connecte_nappe))
+  distinct() %>% 
+  select(-distance_km, -distance2_km, -geol, -nappe_charm)  %>%
+  mutate(connecte_nappe = as.numeric(connecte_nappe)) 
+  
 
 ## Ajouts et qualification de l'attribut "connecte_source" ----
 
 pe <- pe %>%
   mutate(connecte_source = case_when(
     distance_source <= 50 ~ '1',
-    is.na(distance_source)| distance_source > 50 ~ '0')) 
+    is.na(distance_source)| distance_source > 50 ~ '0')) %>%
+  mutate(connecte_source = as.numeric(connecte_source)) 
+
 
 ## Ajouts et qualification de l'attribut "connecte_rh" ----
 
 pe <- pe %>%
-  mutate(connecte_rh = case_when(
+  mutate(connecte_lh = case_when(
     !is.na(longueur_topage_intersecte) ~ '1',
-    is.na(longueur_topage_intersecte) ~ '0')) 
+    is.na(longueur_topage_intersecte) ~ '0')) %>%
+  mutate(connecte_source = as.numeric(connecte_source)) 
 
-# Jointure des résultats à la couche PE ----
+## Ajouts et qualification de l'attribut "connecte_rh" ----
 
-surface_eau <- surface_eau %>% 
-  dplyr::left_join(troncons_plus_proches, 
-                   by = c("cdoh_plando" = "cdoh_plando"))%>% 
-  dplyr::left_join(troncons_topage_plus_proches, 
-                   by = c("cdoh_plando" = "cdoh_plando"))%>% 
-  dplyr::left_join(source_plus_proche, 
-                   by = c("cdoh_plando" = "cdoh_plando"))
+pe <- pe %>%
+  mutate(connecte_rh = ifelse(
+    (connecte_nappe == 0 & connecte_source == 0 & connecte_lh == 0),
+    0, 1))
 
-# export des résultats ----
+# Jointure des ROE ----
 
-sf::write_sf(obj = pe_cd_carthage, dsn = "data/outputs/pe_cd_carthage.gpkg")
-sf::write_sf(obj = pe_cd_topage, dsn = "data/outputs/pe_cd_topage.gpkg")
 
-# Jointure des prélèvements ----
+## Fusionner les ROE par bassin ---- 
 
+roe_total <- dplyr::bind_rows(roe_lb, roe_sn, roe_nr)
+
+## Basculer le ROE en sf_geom ----
+
+roe_geom <- roe_total %>% 
+  filter(!is.na(x_l93)) %>%
+  st_as_sf(coords = c("x_l93", "y_l93"), remove = FALSE, crs = 2154) %>%
+  select(identifiant_roe)
+
+## Affectation ROE le plus proche ----
+
+plus_proche_roe <- sf::st_nearest_feature(x = pe,
+                                         y = roe_geom)
+
+distance_roe <- st_distance(pe,
+                        roe_geom[plus_proche_roe,],
+                        by_element = TRUE)
+
+pe_roe <- pe %>% 
+  cbind(distance_roe) %>% 
+  cbind(roe_geom[plus_proche_roe,]) %>% 
+  st_drop_geometry() %>% 
+  mutate(distance_roe = round(distance_roe)) %>%
+  select(cdoh_plando, identifiant_roe, distance_roe) %>%
+  sf::st_drop_geometry() %>%
+  units::drop_units()
+
+pe <- pe %>% 
+  left_join(y = pe_roe %>% filter(!is.na(longueur_topage_intersecte) &
+                                         distance_roe <= 20))
+
+sf::write_sf(obj = pe, dsn = "data/outputs/pe_qualifies_20231200.gpkg")
 

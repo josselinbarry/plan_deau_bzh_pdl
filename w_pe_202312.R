@@ -18,9 +18,14 @@ library(sf)
 #library(stringi)
 library(units)
 
-source(file = "R/sommer_surfaces_dans_polygone.R")
+source(file = "R/compter_sommer_surfaces_dans_polygone.R")
 
 # Import des données ----
+
+pe <-
+  sf::read_sf(dsn = "data/outputs/pe_qualifies_20231200.gpkg")
+
+interstect_test <- sf::read_sf(dsn = "data/testA.gpkg")
 
 sages <- sf::read_sf(dsn = "data/sages_zone_etude.gpkg") %>%
   st_transform(crs = 2154) %>%
@@ -28,7 +33,7 @@ sages <- sf::read_sf(dsn = "data/sages_zone_etude.gpkg") %>%
   select(NOM, surface_sage) %>%
   rename(nom_sage = NOM)
 
-bv_me_decoup <- sf::read_sf(dsn = "data/bv_me_zone_etude_decoupee.gpkg") %>%
+bv_me_decoup <- sf::read_sf(dsn = "data/bv_me_decoup_20231128.gpkg") %>%
   st_transform(crs = 2154) %>%
   mutate(surface_me = st_area(geom)) %>%
   select(cdeumassed, nombvspemd, surface_me)
@@ -259,77 +264,118 @@ communes <- communes %>%
   dplyr::left_join(lineaire_topage_pe_perm_com, join_by(code_insee == code_insee)) %>%
   dplyr::left_join(lineaire_topage_pehm_perm_com, join_by(code_insee == code_insee))
 
-## Calcul des surfaces cumulées de PE par BV ME ----
+## Décompte et calcul des surfaces cumulées de PE par BV ME ----
 
 pe_decoup_me <- pe %>% 
   st_intersection(bv_me_decoup) %>% # découpage des plando selon les masses d'eau
   mutate(surface_intersect = st_area(.)) %>% # superficie des intersects
   st_drop_geometry()
 
-sf::write_sf(obj = pe_decoup_me, dsn = "data/outputs/intersection_pe_me_20231128.gpkg")
+sf::write_sf(obj = pe_decoup_me, dsn = "data/outputs/intersection_pe_me_20231131.gpkg")
 
 surf_pe_tot_me <-
-  sommer_surfaces_dans_polygone(
+  compter_sommer_surfaces_dans_polygone(
     couche_surface = pe_decoup_me %>% units::drop_units() %>% filter(mare == 0),
     var_id_polygone = cdeumassed,
     var_a_sommer = surface_intersect,
+    var_nb_objets = nb_pe_tot,
     var_somme_surfaces = surf_pe_tot,
     zone_marais_incluse = TRUE,
-    seulement_permanent = FALSE
+    seulement_permanent = FALSE, 
+    seulement_tdbv = FALSE,
+    seulement_connect = FALSE
   )
 
 surf_pehm_tot_me <-
-  sommer_surfaces_dans_polygone(
+  compter_sommer_surfaces_dans_polygone(
     couche_surface = pe_decoup_me %>% units::drop_units() %>% filter(mare == 0),
     var_id_polygone = cdeumassed,
     var_a_sommer = surface_intersect,
+    var_nb_objets = nb_pehm_tot,
     var_somme_surfaces = surf_pehm_tot,
     zone_marais_incluse = FALSE,
-    seulement_permanent = FALSE
+    seulement_permanent = FALSE, 
+    seulement_tdbv = FALSE,
+    seulement_connect = FALSE
   )
 
 surf_pe_perm_me <-
-  sommer_surfaces_dans_polygone(
+  compter_sommer_surfaces_dans_polygone(
     couche_surface = pe_decoup_me %>% units::drop_units() %>% filter(mare == 0),
     var_id_polygone = cdeumassed,
     var_a_sommer = surface_intersect,
+    var_nb_objets = nb_pe_perm,
     var_somme_surfaces = surf_pe_perm,
     zone_marais_incluse = TRUE,
-    seulement_permanent = TRUE
+    seulement_permanent = TRUE, 
+    seulement_tdbv = FALSE,
+    seulement_connect = FALSE
   )
 
 surf_pehm_perm_me <-
-  sommer_surfaces_dans_polygone(
+  compter_sommer_surfaces_dans_polygone(
     couche_surface = pe_decoup_me %>% units::drop_units() %>% filter(mare == 0),
     var_id_polygone = cdeumassed,
     var_a_sommer = surface_intersect,
+    var_nb_objets = nb_pehm_perm,
     var_somme_surfaces = surf_pehm_perm,
+    zone_marais_incluse = FALSE,
+    seulement_permanent = TRUE, 
+    seulement_tdbv = FALSE,
+    seulement_connect = FALSE
+  )
+
+surf_pehm_tdbv_tot_me <-
+  compter_sommer_surfaces_dans_polygone(
+    couche_surface = pe_decoup_me %>% units::drop_units() %>% filter(mare == 0),
+    var_id_polygone = cdeumassed,
+    var_a_sommer = surface_intersect,
+    var_nb_objets = nb_pehm_perm,
+    var_somme_surfaces = surf_pehm_perm,
+    zone_marais_incluse = FALSE,
+    seulement_permanent = TRUE, 
+    seulement_tdbv = FALSE,
+    seulement_connect = FALSE
+  )
+  
+#surf_pehm_tdbv_perm_me <-
+  sommer_surfaces_dans_polygone(
+    couche_surface = pe_decoup_me %>% 
+      units::drop_units() %>% 
+      filter(mare == 0) %>%
+      filter(StreamOrde < 3 & distance_topage < 200),
+    var_id_polygone = cdeumassed,
+    var_a_sommer = surface_intersect,
+    var_somme_surfaces = surf_pehm_tdbv_perm,
     zone_marais_incluse = FALSE,
     seulement_permanent = TRUE
   )
 
-#surf_pehm_tdbv_tot_me <- pe_decoup_me %>%
-#  filter(zone_marais == 0 &
-#           StreamOrde < 3 &
-#           distance_topage < 50) %>%
-#  group_by(cdeumassed) %>%
-#  summarise(surface_pehm_tdbv_tot_me = sum(surface_intersect)) %>%
-#  select(cdeumassed, # sélection des variables à conserver
-#         surface_pehm_tdbv_tot) 
-
-#surf_pehm_connecte_tot <- pe_decoup_me %>% #connecté au réseau hydro = sur nappe (alluvions/colluvions/...) ou <= 50M source ou intersection stricte CE)
-#  filter(zone_marais == 0 & distance_topage < 50) %>%
-#  group_by(cdeumassed) %>%
-#  summarise(surface_pehm_sur_cours_tot = sum(surface_intersect)) %>%
-#  select(cdeumassed, # sélection des variables à conserver
-#         surface_pehm_sur_cours_tot) 
-
-#surf_pehm_sur_cours_tot <- pe_decoup_me %>%
-#  filter(zone_marais == 0 & distance_topage < 50 & Persistanc == "permanent") %>%
-#  group_by(cdeumassed) %>%
-#  summarise(surface_pehm_sur_cours_me = sum(surface_intersect)) %>%
-#  select(cdeumassed, # sélection des variables à conserver
-#         surface_pehm_sur_cours_perm)
+#surf_pehm_connecte_tot_me <-
+  sommer_surfaces_dans_polygone(
+    couche_surface = pe_decoup_me %>% 
+      units::drop_units() %>% 
+      filter(mare == 0) %>%
+      filter(connecte_nappe == 1 | connecte_source == 1 | connecte_rh == 1),
+    var_id_polygone = cdeumassed,
+    var_a_sommer = surface_intersect,
+    var_somme_surfaces = surf_pehm_connecte_tot,
+    zone_marais_incluse = FALSE,
+    seulement_permanent = FALSE
+  )
+  
+#surf_pehm_connecte_perm_me <-
+  sommer_surfaces_dans_polygone(
+    couche_surface = pe_decoup_me %>% 
+      units::drop_units() %>% 
+      filter(mare == 0) %>%
+      filter(connecte_nappe == 1 | connecte_source == 1 | connecte_rh == 1),
+    var_id_polygone = cdeumassed,
+    var_a_sommer = surface_intersect,
+    var_somme_surfaces = surf_pehm_connecte_perm,
+    zone_marais_incluse = FALSE,
+    seulement_permanent = TRUE
+  )
 
 ## Jointure des surfaces cumulées de PE par BV ME ----
 
@@ -344,14 +390,84 @@ bv_me_decoup <- bv_me_decoup %>%
 
 sf::write_sf(obj = bv_me_decoup, dsn = "data/outputs/bv_me_decoup_20231128.gpkg")
 
+## Calcul du nombre de PE par ME ----
+#uniquement PEHM hors ME PE
+
+### NB PE TOTAL tot
+
+nb_pe_tot_me <-
+  compter_objets_dans_polygone(
+    couche_objets = pe_decoup_me %>% 
+      units::drop_units() %>% 
+      filter(mare == 0),
+    var_id_polygone = cdeumassed,
+    var_nb_objets = "nb_pe_tot_me",
+    zone_marais_incluse = FALSE,
+    seulement_permanent = FALSE
+  )
+
+# NB PE TDBV tot
+
+nb_pe_tdbv_tot_me <-
+  compter_objets_dans_polygone(
+  couche_objets = pe_decoup_me %>% 
+    units::drop_units() %>% 
+    filter(mare == 0) %>%
+    filter(StreamOrde < 3),
+  var_id_polygone = cdeumassed,
+  zone_marais_incluse = FALSE,
+  seulement_permanent = FALSE
+)
+# NB PE CONNECTE tot
+
+nb_pe_connecte_tot_me <-
+  compter_objets_dans_polygone(
+    couche_objets = pe_decoup_me %>% 
+      units::drop_units() %>% 
+      filter(mare == 0) %>%
+      filter(connecte_rh == 1),
+    var_id_polygone = cdeumassed,
+    zone_marais_incluse = FALSE,
+    seulement_permanent = FALSE
+  )
+
+# NB PE SUR COURS tot
+
+nb_pe_sc_tot_me <-
+  compter_objets_dans_polygone(
+    couche_objets = pe_decoup_me %>% 
+      units::drop_units() %>% 
+      filter(mare == 0) %>%
+      filter(!is.na(longueur_topage_intersecte)),
+    var_id_polygone = cdeumassed,
+    zone_marais_incluse = FALSE,
+    seulement_permanent = FALSE
+  )
+
+# NB PE TOTAL perm
+
+nb_pe_perm_me
+
+# NB PE TDBV perm
+
+nb_pe_tdbv_perm_me
+
+# NB PE CONNECTE perm
+
+nb_pe_connecte_perm_me
+
+# NB PE SUR COURS perm
+
+nb_pe_sc_perm_me
+
 ## Calcul des surfaces cumulées de PE par sage ----
 
 pe_decoup_sage <- pe %>% 
   st_intersection(sages) %>% # découpage des plando selon les masses d'eau
-  mutate(surface_intersect = st_area(.)) %>% # superficie des intersects
+  mutate(surface_intersect = st_area(.)) # superficie des intersects
   st_drop_geometry()
 
-sf::write_sf(obj = pe_decoup_sage, dsn = "data/outputs/intersection_pe_sage_20231128.gpkg")
+sf::write_sf(obj = pe_decoup_sage, dsn = "data/outputs/intersection_pe_sage_20231131.gpkg")
 
 surf_pe_tot_sage <-
   sommer_surfaces_dans_polygone(
@@ -392,6 +508,58 @@ surf_pehm_perm_sage <-
     zone_marais_incluse = FALSE,
     seulement_permanent = TRUE
   )
+
+#surf_pehm_tdbv_tot_sage <-
+sommer_surfaces_dans_polygone(
+  couche_surface = pe_decoup_sage %>% 
+    units::drop_units() %>% 
+    filter(mare == 0) %>%
+    filter(StreamOrde < 3 & distance_topage < 200),
+  var_id_polygone = nom_sage,
+  var_a_sommer = surface_intersect,
+  var_somme_surfaces = surf_pehm_tdbv_tot,
+  zone_marais_incluse = FALSE,
+  seulement_permanent = FALSE
+)
+
+#surf_pehm_tdbv_perm_sage <-
+sommer_surfaces_dans_polygone(
+  couche_surface = pe_decoup_sage %>% 
+    units::drop_units() %>% 
+    filter(mare == 0) %>%
+    filter(StreamOrde < 3),
+  var_id_polygone = nom_sage,
+  var_a_sommer = surface_intersect,
+  var_somme_surfaces = surf_pehm_tdbv_perm,
+  zone_marais_incluse = FALSE,
+  seulement_permanent = TRUE
+)
+
+#surf_pehm_connecte_tot_sage <-
+sommer_surfaces_dans_polygone(
+  couche_surface = pe_decoup_sage %>% 
+    units::drop_units() %>% 
+    filter(mare == 0) %>%
+    filter(connecte_nappe == 1 | connecte_source == 1 | connecte_rh == 1),
+  var_id_polygone = nom_sage,
+  var_a_sommer = surface_intersect,
+  var_somme_surfaces = surf_pehm_connecte_tot,
+  zone_marais_incluse = FALSE,
+  seulement_permanent = FALSE
+)
+
+#surf_pehm_connecte_perm_sage <-
+sommer_surfaces_dans_polygone(
+  couche_surface = pe_decoup_sage %>% 
+    units::drop_units() %>% 
+    filter(mare == 0) %>%
+    filter(connecte_nappe == 1 | connecte_source == 1 | connecte_rh == 1),
+  var_id_polygone = nom_sage,
+  var_a_sommer = surface_intersect,
+  var_somme_surfaces = surf_pehm_connecte_perm,
+  zone_marais_incluse = FALSE,
+  seulement_permanent = TRUE
+)
 
 ## Jointure des surfaces cumulées de PE par sage ----
 
@@ -464,6 +632,105 @@ communes <- communes %>%
 
 sf::write_sf(obj = communes, dsn = "data/outputs/communes_20231128.gpkg")
 
+## Synthèse des prélèvements en retenur par ME ----
+
+prelevements_me <- prelevements %>%
+  st_join(bv_me_decoup, 
+          largest = T) %>%
+  distinct()
+
+me_prelevements <- prelevements_me %>%
+  group_by(cdeumassed) %>%
+  summarise(prel_2008_tot = sum(X2008_1),
+            prel_2009_tot = sum(X2009_1),
+            prel_2010_tot = sum(X2010_1),
+            prel_2011_tot = sum(X2011_1),
+            prel_2012_tot = sum(X2012_1),
+            prel_2013_tot = sum(X2013_1),
+            prel_2014_tot = sum(X2014_1),
+            prel_2015_tot = sum(X2015_1),
+            prel_2016_tot = sum(X2016_1)) %>%
+  select(cdeumassed,
+         prel_2008_tot, 
+         prel_2009_tot,
+         prel_2010_tot,
+         prel_2011_tot,
+         prel_2012_tot,
+         prel_2013_tot,
+         prel_2014_tot,
+         prel_2015_tot,
+         prel_2016_tot) %>%
+  sf::st_drop_geometry() 
+
+bv_me_decoup_test <- bv_me_decoup %>%
+  left_join(y = me_prelevements)
+
+## Synthèse des prélèvements en retenur par sage ----
+
+prelevements_sage <- prelevements %>%
+  st_join(sages, 
+          largest = T) %>%
+  distinct()
+
+sage_prelevements <- prelevements_sage %>%
+  group_by(nom_sage) %>%
+  summarise(prel_2008_tot = sum(X2008_1),
+            prel_2009_tot = sum(X2009_1),
+            prel_2010_tot = sum(X2010_1),
+            prel_2011_tot = sum(X2011_1),
+            prel_2012_tot = sum(X2012_1),
+            prel_2013_tot = sum(X2013_1),
+            prel_2014_tot = sum(X2014_1),
+            prel_2015_tot = sum(X2015_1),
+            prel_2016_tot = sum(X2016_1)) %>%
+  select(nom_sage,
+         prel_2008_tot, 
+         prel_2009_tot,
+         prel_2010_tot,
+         prel_2011_tot,
+         prel_2012_tot,
+         prel_2013_tot,
+         prel_2014_tot,
+         prel_2015_tot,
+         prel_2016_tot) %>%
+  sf::st_drop_geometry() 
+
+sages_test <- sages %>%
+  left_join(y = sage_prelevements)
+
+## Synthèse des prélèvements en retenur par commune ----
+
+prelevements_com <- prelevements %>%
+  st_join(communes, 
+          largest = T) %>%
+  distinct()
+
+com_prelevements <- prelevements_com %>%
+  group_by(code_insee) %>%
+  summarise(prel_2008_tot = sum(X2008_1),
+            prel_2009_tot = sum(X2009_1),
+            prel_2010_tot = sum(X2010_1),
+            prel_2011_tot = sum(X2011_1),
+            prel_2012_tot = sum(X2012_1),
+            prel_2013_tot = sum(X2013_1),
+            prel_2014_tot = sum(X2014_1),
+            prel_2015_tot = sum(X2015_1),
+            prel_2016_tot = sum(X2016_1)) %>%
+  select(code_insee,
+         prel_2008_tot, 
+         prel_2009_tot,
+         prel_2010_tot,
+         prel_2011_tot,
+         prel_2012_tot,
+         prel_2013_tot,
+         prel_2014_tot,
+         prel_2015_tot,
+         prel_2016_tot) %>%
+  sf::st_drop_geometry() 
+
+communes_test <- communes %>%
+  left_join(y = com_prelevements)
+
 # Sauvegarde des résultats
 
 save(ce_topage_me,
@@ -480,7 +747,9 @@ save(ce_topage_me,
      communes,
      file = "data/outputs/w_territoires.RData")
 
-save(centroides_pe_qualifies2,
+save(pe_decoup_me,
+     pe_decoup_sage,
+     pe_decoup_com,
      file = "data/outputs/w_territoires2.RData")
 
 # chargement des résultats
@@ -493,7 +762,12 @@ load(file = "data/outputs/w_plando2.RData")
 troncons_topage_plus_proches <-
   sf::read_sf(dsn = "data/outputs/troncons_topage_plus_proches.gpkg")
 
+# Synthèse volume prelevements par ME (INCLUS DS REGION) SAGE, dprt, region ----
+Toto prelevements
+Uniquement en retenue
+
+
 # brouillon ----
 
 pe <- pe %>%
-  select(-starts_with("longueur"), -starts_with("surface"))
+  select(starts_with("prel"))
