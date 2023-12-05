@@ -218,6 +218,16 @@ roe_nr <- data.table::fread(file = "data/nr_temp20230402.csv",
                             encoding = "Latin-1",
                             colClasses = c("date_creation" = "character"))
   
+prelevements_2019_bzh <- data.table::fread(file = "data/prelevements_redevance_AELB_region-bretagne_2019.csv",
+                                       encoding = "Latin-1")
+
+prelevements_2019_pdl <- data.table::fread(file = "data/prelevements_region-pays-de-loire_2019.csv",
+                                           encoding = "Latin-1")
+
+# Fusion des prelevements 2019 ----
+
+prelevements_2019 <- dplyr::bind_rows(prelevements_2019_pdl, prelevements_2019_bzh)
+
 # Fusion des bd_charm de la zone d'étude ----
 
 charm_zone_etude <- 
@@ -605,7 +615,7 @@ save(pe,
 #            typ_coord = first(typ_coord),
 #            nat_capt = first(nat_capt))
 
-sf::write_sf(obj = points_prelev_ssdoubles, dsn = "data/outputs/points_prelev_ssdoubles.gpkg")
+# sf::write_sf(obj = points_prelev_ssdoubles, dsn = "data/outputs/points_prelev_ssdoubles.gpkg")
 
 plus_proche_pe <- sf::st_nearest_feature(x = prelevements,
                                          y = pe)

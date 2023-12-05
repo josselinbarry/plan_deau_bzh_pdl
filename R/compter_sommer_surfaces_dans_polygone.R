@@ -40,7 +40,8 @@ compter_sommer_surfaces_dans_polygone <- function(couche_surface,
                                           zone_marais_incluse = TRUE,
                                           seulement_permanent = FALSE,
                                           seulement_tdbv = FALSE,
-                                          seulement_connecte = FALSE)
+                                          seulement_connecte = FALSE, 
+                                          seulement_sur_cours = FALSE)
   
 {
   var_id_polygone <- enquo(var_id_polygone)
@@ -60,10 +61,15 @@ compter_sommer_surfaces_dans_polygone <- function(couche_surface,
   
   if (seulement_tdbv) {
     couche_surface <- couche_surface %>%
-      filter(StremOrde < 3)
+      filter(StreamOrde < 3)
   }
   
   if (seulement_connecte) {
+    couche_surface <- couche_surface %>%
+      filter(connecte_rh == 1)
+  }
+  
+  if (seulement_sur_cours) {
     couche_surface <- couche_surface %>%
       filter(!is.na(longueur_topage_intersecte))
   }
