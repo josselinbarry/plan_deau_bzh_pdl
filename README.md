@@ -59,10 +59,6 @@ Les couches de territoires retenues sont les suivantes :
     -	**longueur_ce_tdbv_topage** : somme des linéaires de tronçons en tête de bassin versant.
     -	**strahler_max** : rang de stahler maximum rencontré sur l'entité
  
-- Une partie de ce script permet de synthétiser les variables des couches de débit :
-    -	**qa_moy_max** (L/s) : module maximal rencontré sur l'entité
-    -	**q5_moy_max** (L/s) : qmna5 maximal rencontré sur l'entité
-   
 -	Une partie de ce script consiste à synthétiser les variables de la couche plan d’eau par entité de territoire :
     -	**longueur_topage_intersecte_pe_tot** : somme des linéaires de tronçons de la BD Topage interceptés par des PE.
     -	**longueur_topage_intersecte_pehm_tot** : somme des linéaires de tronçons de la BD Topage interceptés par des PE (hors marais).
@@ -82,3 +78,8 @@ Les couches de territoires retenues sont les suivantes :
     -	**nb_pehm_sur_cours_perm** et **surf_pehm_sur_cours_perm** : décompte et somme des surfaces des PE sur cours permanents (hors marais)
     -	**surface_moy_pe_perm** : calcul de la surface moyenne des plans d’eau permanents
     -	**surface_moy_pe_perm_tdbv** : calcul de la surface moyenne des plans d’eau permanents en TDBV
+
+- Une partie de ce script permet de synthétiser les variables des couches de débit :
+    -	**QAMOY_max** (L/s) : module maximal rencontré sur l'entité
+    -	**Q5MOY_max** (L/s) : qmna5 maximal rencontré sur l'entité
+   
