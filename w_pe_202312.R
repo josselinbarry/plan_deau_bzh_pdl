@@ -1416,6 +1416,80 @@ com_prelevements <- prelevements_com %>%
 communes_test <- communes %>%
   left_join(y = com_prelevements)
 
+# Synthèse des résultats de la couche communes aux couches départements et régions ----
+
+dprt <- communes %>%
+  group_by(insee_dep) %>%
+  summarise(
+    longueur_ce_topage = sum(longueur_ce_topage, na.rm = TRUE),
+    longueur_ce_tdbv_topage = sum(longueur_ce_tdbv_topage, na.rm = TRUE),
+    strahler_max = max(strahler_max, na.rm = TRUE),
+    longueur_topage_intersecte_pe_tot = sum(longueur_topage_intersecte_pe_tot, na.rm = TRUE),
+    longueur_topage_intersecte_pehm_tot = sum(longueur_topage_intersecte_pehm_tot, na.rm = TRUE),
+    longueur_topage_intersecte_pehm_tdbv_tot = sum(longueur_topage_intersecte_pehm_tdbv_tot, na.rm = TRUE),
+    longueur_topage_intersecte_pe_perm = sum(longueur_topage_intersecte_pe_perm, na.rm = TRUE),
+    longueur_topage_intersecte_pehm_perm = sum(longueur_topage_intersecte_pehm_perm, na.rm = TRUE),
+    longueur_topage_intersecte_pehm_tdbv_perm = sum(longueur_topage_intersecte_pehm_tdbv_perm, na.rm = TRUE),
+    nb_pe_tot = sum(nb_pe_tot, na.rm = TRUE),
+    surf_pe_tot = sum(surf_pe_tot, na.rm = TRUE),
+    nb_pehm_tot = sum(nb_pehm_tot, na.rm = TRUE),
+    surf_pehm_tot= sum(surf_pehm_tot, na.rm = TRUE),
+    nb_pe_perm = sum(nb_pe_perm, na.rm = TRUE),
+    surf_pe_perm = sum(surf_pe_perm, na.rm = TRUE),
+    nb_pehm_perm = sum(nb_pehm_perm, na.rm = TRUE),
+    surf_pehm_perm = sum(surf_pehm_perm, na.rm = TRUE),
+    nb_pehm_tdbv_tot = sum(nb_pehm_tdbv_tot, na.rm = TRUE),
+    surf_pehm_tdbv_tot = sum(surf_pehm_tdbv_tot, na.rm = TRUE),
+    nb_pehm_tdbv_perm = sum(nb_pehm_tdbv_perm, na.rm = TRUE),
+    surf_pehm_tdbv_perm = sum(surf_pehm_tdbv_perm, na.rm = TRUE),
+    nb_pehm_connecte_tot = sum(nb_pehm_connecte_tot, na.rm = TRUE),
+    surf_pehm_connecte_tot = sum(surf_pehm_connecte_tot, na.rm = TRUE),
+    nb_pehm_connecte_perm = sum(nb_pehm_connecte_perm, na.rm = TRUE),
+    surf_pehm_connecte_perm = sum(surf_pehm_connecte_perm, na.rm = TRUE),
+    nb_pehm_sur_cours_tot = sum(nb_pehm_sur_cours_tot, na.rm = TRUE),
+    surf_pehm_sur_cours_tot = sum(surf_pehm_sur_cours_tot, na.rm = TRUE),
+    nb_pehm_sur_cours_perm = sum(nb_pehm_sur_cours_perm, na.rm = TRUE),
+    surf_pehm_sur_cours_perm = sum(surf_pehm_sur_cours_perm, na.rm = TRUE),
+    QAMOY_max = max(QAMOY_max, na.rm = TRUE),
+    Q5MOY_max = max(Q5MOY_max, na.rm = TRUE)) %>%
+  filter(insee_dep %in% c(22, 29, 35, 44, 49, 53, 56, 72, 85))
+
+region <- communes %>%
+  group_by(insee_reg) %>%
+  summarise(
+    longueur_ce_topage = sum(longueur_ce_topage, na.rm = TRUE),
+    longueur_ce_tdbv_topage = sum(longueur_ce_tdbv_topage, na.rm = TRUE),
+    strahler_max = max(strahler_max, na.rm = TRUE),
+    longueur_topage_intersecte_pe_tot = sum(longueur_topage_intersecte_pe_tot, na.rm = TRUE),
+    longueur_topage_intersecte_pehm_tot = sum(longueur_topage_intersecte_pehm_tot, na.rm = TRUE),
+    longueur_topage_intersecte_pehm_tdbv_tot = sum(longueur_topage_intersecte_pehm_tdbv_tot, na.rm = TRUE),
+    longueur_topage_intersecte_pe_perm = sum(longueur_topage_intersecte_pe_perm, na.rm = TRUE),
+    longueur_topage_intersecte_pehm_perm = sum(longueur_topage_intersecte_pehm_perm, na.rm = TRUE),
+    longueur_topage_intersecte_pehm_tdbv_perm = sum(longueur_topage_intersecte_pehm_tdbv_perm, na.rm = TRUE),
+    nb_pe_tot = sum(nb_pe_tot, na.rm = TRUE),
+    surf_pe_tot = sum(surf_pe_tot, na.rm = TRUE),
+    nb_pehm_tot = sum(nb_pehm_tot, na.rm = TRUE),
+    surf_pehm_tot= sum(surf_pehm_tot, na.rm = TRUE),
+    nb_pe_perm = sum(nb_pe_perm, na.rm = TRUE),
+    surf_pe_perm = sum(surf_pe_perm, na.rm = TRUE),
+    nb_pehm_perm = sum(nb_pehm_perm, na.rm = TRUE),
+    surf_pehm_perm = sum(surf_pehm_perm, na.rm = TRUE),
+    nb_pehm_tdbv_tot = sum(nb_pehm_tdbv_tot, na.rm = TRUE),
+    surf_pehm_tdbv_tot = sum(surf_pehm_tdbv_tot, na.rm = TRUE),
+    nb_pehm_tdbv_perm = sum(nb_pehm_tdbv_perm, na.rm = TRUE),
+    surf_pehm_tdbv_perm = sum(surf_pehm_tdbv_perm, na.rm = TRUE),
+    nb_pehm_connecte_tot = sum(nb_pehm_connecte_tot, na.rm = TRUE),
+    surf_pehm_connecte_tot = sum(surf_pehm_connecte_tot, na.rm = TRUE),
+    nb_pehm_connecte_perm = sum(nb_pehm_connecte_perm, na.rm = TRUE),
+    surf_pehm_connecte_perm = sum(surf_pehm_connecte_perm, na.rm = TRUE),
+    nb_pehm_sur_cours_tot = sum(nb_pehm_sur_cours_tot, na.rm = TRUE),
+    surf_pehm_sur_cours_tot = sum(surf_pehm_sur_cours_tot, na.rm = TRUE),
+    nb_pehm_sur_cours_perm = sum(nb_pehm_sur_cours_perm, na.rm = TRUE),
+    surf_pehm_sur_cours_perm = sum(surf_pehm_sur_cours_perm, na.rm = TRUE),
+    QAMOY_max = max(QAMOY_max, na.rm = TRUE),
+    Q5MOY_max = max(Q5MOY_max, na.rm = TRUE)) %>%
+  filter(insee_reg %in% c(52, 53))
+
 # Sauvegarde des résultats
 
 save(ce_topage_me,

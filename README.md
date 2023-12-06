@@ -50,6 +50,10 @@ Les couches de territoires retenues sont les suivantes :
 
 **communes** : couche des communes issue de la BD TOPO V3 depuis le flux WFS de l'IGN (https://data.geopf.fr/wfs/ows?VERSION=2.0.0)
 
+**departements** : couche des départements issue de la BD TOPO V3 depuis le flux WFS de l'IGN (https://data.geopf.fr/wfs/ows?VERSION=2.0.0)
+
+**regions** : couche des régions issue de la BD TOPO V3 depuis le flux WFS de l'IGN (https://data.geopf.fr/wfs/ows?VERSION=2.0.0)
+
 **bv_ipr** : numérisation des BV amonts des stations de prélèvement piscicoles à partir de r.watershed et r.wateroutlet du logiciel GRASS
 
 **bv_decoup_me** : découpage de la couche des bassins versant des masses d'eau à leur stricte partie territoriale, par différenciation avec les couches "Masses d'eau côtières" et "Masses d'eau de transition".
@@ -82,4 +86,6 @@ Les couches de territoires retenues sont les suivantes :
 - Une partie de ce script permet de synthétiser les variables des couches de débit :
     -	**QAMOY_max** (L/s) : module maximal rencontré sur l'entité
     -	**Q5MOY_max** (L/s) : qmna5 maximal rencontré sur l'entité
+    
+- Une partie de ce script vise à synthétiser les valeurs obtenues pour la couche communes, aux couches départements et région.
    
