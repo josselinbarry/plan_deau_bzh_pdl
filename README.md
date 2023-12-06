@@ -11,7 +11,7 @@ En second lieu, étudier les liens de corrélation entre ces variables d’impla
     - Sélection des surfaces élémentaires de la zone d'étude
     - Suppression des chevauchements de zones par "Couper-collé" (sans recouvrement de zones) des objets les plus petits aux objets les plus gros
     - Suppression des invalidités de géométries (extension nettoyeur de polygones)
-    - Création et calcul d'un champ coef_gravelius = perimeter()/(2*sqrt(pi()*area()))
+    - Création et calcul d'un champ coef_gravelius = perimetre / (2 x sqrt(pi x area)
     - Création et affectation d'un code 0/1 pour les attributs :
         - ecoulement_naturel (NatureSE canal, écoulement canalisé ou écoulement naturel + corrections manuelles)
         - zone_marais (attribution manuelle à partir des zones de marais du Scan25)
