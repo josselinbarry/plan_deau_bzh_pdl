@@ -36,10 +36,14 @@ En second lieu, étudier les liens de corrélation entre ces variables d’impla
     - **connecte_nappe** (0/1) : intersection du plan d'eau avec les zones d'alluvions et certaines de zones de colluvions de la BD CHARM (XXX)
     - **connecte_source** (0/1) : plan d'eau situé à 50m maximum d'une source
     - **connecte_rh** (0/1) : si la plan d'eau est connecté au linéaire hydrographique, à une source ou à la nappe
-    - **lithologie_simplifiée** : jointure spatiale de la couche "Carte lithologique simplifiée au 1/1 000 000" au centroïde du plan d'eau (couche issue du flux WMS du BRGM : http://geoservices.brgm.fr/geologie)
+    - **nom_sage** : sage(s) avec le(s)quel(s) intersecte le plan d'eau
+    - **cd_me** : masse(s) d'eau avec la(es)quelle(s) intersecte le plan d'eau
+    - **nom_communes** : commune(s) avec la(es)quelle(s) intersecte le plan d'eau
+    - **lithologie** : jointure spatiale de la couche "Carte lithologique simplifiée au 1/1 000 000" au centroïde du plan d'eau (couche issue du flux WMS du BRGM : http://geoservices.brgm.fr/geologie)
     - **géologie** :  jointure spatiale de la géologie issue de la BD CHARM
     - **distance_roe** (m) : calcul de la distance aux ouvrages du ROE et affectation des principales valeurs attributaires des ouvrages situées à 20m maximum
-    - **prelevements** : somme des volumes des prélèvements situés à 20m maximum du plan d'eau
+    - **prel__2008_ret** à **prel__2019_ret** : somme des volumes des prélèvements situés à 20m maximum du plan d'eau respectivement en retenue et totaux
+    - **pourcentage_captage_retenue** : part des volumes captés en retenue sur le total des captages
     - **thermie** : A FAIRE
 
 **2. Un second script permet de constituer les couches de territoire (bassin versant des masses d’eau, SAGE, communes, bassin versant amont des stations de prélèvement IPR)** :
@@ -88,4 +92,7 @@ Les couches de territoires retenues sont les suivantes :
     -	**Q5MOY_max** (L/s) : qmna5 maximal rencontré sur l'entité
     
 - Une partie de ce script vise à synthétiser les valeurs obtenues pour la couche communes, aux couches départements et région.
+
+Somme des longueurs, des surfaces et des nombres d'objets.
+Valeurs maximales du rang de Strahler et des valeurs de débit.
    

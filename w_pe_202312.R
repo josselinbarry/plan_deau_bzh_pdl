@@ -19,6 +19,8 @@ library(sf)
 library(units)
 
 source(file = "R/compter_sommer_surfaces_dans_polygone.R")
+source(file = "R/sommer_volume_points_ds_polygone.R")
+
 
 # Import des données ----
 
@@ -1326,6 +1328,57 @@ prelevements_me <- prelevements %>%
 
 me_prelevements <- prelevements_me %>%
   group_by(cdeumassed) %>%
+  summarise(prel_2008_ret = sum(X2008_1),
+            prel_2009_ret = sum(X2009_1),
+            prel_2010_ret = sum(X2010_1),
+            prel_2011_ret = sum(X2011_1),
+            prel_2012_ret = sum(X2012_1),
+            prel_2013_ret = sum(X2013_1),
+            prel_2014_ret = sum(X2014_1),
+            prel_2015_ret = sum(X2015_1),
+            prel_2016_ret = sum(X2016_1)) %>%
+  select(cdeumassed,
+         prel_2008_ret, 
+         prel_2009_ret,
+         prel_2010_ret,
+         prel_2011_ret,
+         prel_2012_ret,
+         prel_2013_ret,
+         prel_2014_ret,
+         prel_2015_ret,
+         prel_2016_ret) %>%
+  sf::st_drop_geometry() 
+
+bv_me_decoup <- bv_me_decoup %>%
+  left_join(y = me_prelevements)
+
+## Synthèse des prélèvements 2019 en retenue par ME ----
+
+prelevements_me_2019 <- prelevements_2019 %>%
+  st_join(bv_me_decoup %>% select(cdeumassed), 
+          largest = T) %>%
+  distinct()
+
+me_prelevements_2019 <- prelevements_me_2019 %>%
+  filter(sur_retenue == 1) %>%
+  group_by(cdeumassed) %>%
+  summarise(prel_2019_ret = sum(VOLUME)) %>%
+  select(cdeumassed,
+         prel_2019_ret) %>%
+  sf::st_drop_geometry() 
+
+bv_me_decoup <- bv_me_decoup %>%
+  left_join(y = me_prelevements_2019)
+
+## Synthèse des prélèvements par ME ----
+
+prelevements_totaux_me <- prelevements_totaux %>%
+  st_join(bv_me_decoup, 
+          largest = T) %>%
+  distinct()
+
+me_prelevements_totaux <- prelevements_totaux_me %>%
+  group_by(cdeumassed) %>%
   summarise(prel_2008_tot = sum(X2008_1),
             prel_2009_tot = sum(X2009_1),
             prel_2010_tot = sum(X2010_1),
@@ -1347,8 +1400,27 @@ me_prelevements <- prelevements_me %>%
          prel_2016_tot) %>%
   sf::st_drop_geometry() 
 
-bv_me_decoup_test <- bv_me_decoup %>%
-  left_join(y = me_prelevements)
+bv_me_decoup <- bv_me_decoup %>%
+  left_join(y = me_prelevements_totaux)
+
+## Synthèse des prélèvements 2019 par ME ----
+
+prelevements_me_tot_2019 <- prelevements_2019 %>%
+  st_join(bv_me_decoup %>% select(cdeumassed), 
+          largest = T) %>%
+  distinct()
+
+me_prelevements_tot_2019 <- prelevements_me_tot_2019  %>%
+  group_by(cdeumassed) %>%
+  summarise(prel_2019_tot = sum(VOLUME)) %>%
+  select(cdeumassed,
+         prel_2019_tot) %>%
+  sf::st_drop_geometry() 
+
+bv_me_decoup <- bv_me_decoup %>%
+  left_join(y = me_prelevements_tot_2019)
+
+sf::write_sf(obj = bv_me_decoup, dsn = "data/outputs/bv_me_decoup_20231201.gpkg")
 
 ## Synthèse des prélèvements en retenue par sage ----
 
@@ -1358,6 +1430,57 @@ prelevements_sage <- prelevements %>%
   distinct()
 
 sage_prelevements <- prelevements_sage %>%
+  group_by(nom_sage) %>%
+  summarise(prel_2008_ret = sum(X2008_1),
+            prel_2009_ret = sum(X2009_1),
+            prel_2010_ret = sum(X2010_1),
+            prel_2011_ret = sum(X2011_1),
+            prel_2012_ret = sum(X2012_1),
+            prel_2013_ret = sum(X2013_1),
+            prel_2014_ret = sum(X2014_1),
+            prel_2015_ret = sum(X2015_1),
+            prel_2016_ret = sum(X2016_1)) %>%
+  select(nom_sage,
+         prel_2008_ret, 
+         prel_2009_ret,
+         prel_2010_ret,
+         prel_2011_ret,
+         prel_2012_ret,
+         prel_2013_ret,
+         prel_2014_ret,
+         prel_2015_ret,
+         prel_2016_ret) %>%
+  sf::st_drop_geometry() 
+
+sages <- sages %>%
+  left_join(y = sage_prelevements)
+
+## Synthèse des prélèvements 2019 en retenue par sage ----
+
+prelevements_sage_2019 <- prelevements_2019 %>%
+  st_join(sages %>% select(nom_sage), 
+          largest = T) %>%
+  distinct()
+
+sage_prelevements_2019 <- prelevements_sage_2019 %>%
+  filter(sur_retenue == 1) %>%
+  group_by(nom_sage) %>%
+  summarise(prel_2019_ret = sum(VOLUME)) %>%
+  select(nom_sage,
+         prel_2019_ret) %>%
+  sf::st_drop_geometry() 
+
+sages <- sages %>%
+  left_join(y = sage_prelevements_2019)
+
+## Synthèse des prélèvements par ME ----
+
+prelevements_totaux_sage <- prelevements_totaux %>%
+  st_join(sages, 
+          largest = T) %>%
+  distinct()
+
+sage_prelevements_totaux <- prelevements_totaux_sage %>%
   group_by(nom_sage) %>%
   summarise(prel_2008_tot = sum(X2008_1),
             prel_2009_tot = sum(X2009_1),
@@ -1380,8 +1503,79 @@ sage_prelevements <- prelevements_sage %>%
          prel_2016_tot) %>%
   sf::st_drop_geometry() 
 
-sages_test <- sages %>%
-  left_join(y = sage_prelevements)
+sages <- sages %>%
+  left_join(y = sage_prelevements_totaux)
+
+## Synthèse des prélèvements 2019 par ME ----
+
+prelevements_sage_tot_2019 <- prelevements_2019 %>%
+  st_join(sages %>% select(nom_sage), 
+          largest = T) %>%
+  distinct()
+
+sage_prelevements_tot_2019 <- prelevements_sage_tot_2019  %>%
+  group_by(nom_sage) %>%
+  summarise(prel_2019_tot = sum(VOLUME)) %>%
+  select(nom_sage,
+         prel_2019_tot) %>%
+  sf::st_drop_geometry() 
+
+sages <- sages %>%
+  left_join(y = sage_prelevements_tot_2019)
+
+sf::write_sf(obj = sages, dsn = "data/outputs/sages_20231201.gpkg")
+
+## XXXSynthèse des prélèvements par commune ----
+
+prelevements_totaux_me <- prelevements_totaux %>%
+  st_join(bv_me_decoup, 
+          largest = T) %>%
+  distinct()
+
+me_prelevements_totaux <- prelevements_totaux_me %>%
+  group_by(cdeumassed) %>%
+  summarise(prel_2008_tot = sum(X2008_1),
+            prel_2009_tot = sum(X2009_1),
+            prel_2010_tot = sum(X2010_1),
+            prel_2011_tot = sum(X2011_1),
+            prel_2012_tot = sum(X2012_1),
+            prel_2013_tot = sum(X2013_1),
+            prel_2014_tot = sum(X2014_1),
+            prel_2015_tot = sum(X2015_1),
+            prel_2016_tot = sum(X2016_1)) %>%
+  select(cdeumassed,
+         prel_2008_tot, 
+         prel_2009_tot,
+         prel_2010_tot,
+         prel_2011_tot,
+         prel_2012_tot,
+         prel_2013_tot,
+         prel_2014_tot,
+         prel_2015_tot,
+         prel_2016_tot) %>%
+  sf::st_drop_geometry() 
+
+bv_me_decoup <- bv_me_decoup %>%
+  left_join(y = me_prelevements_totaux)
+
+## Synthèse des prélèvements 2019 par SAGE ----
+
+prelevements_tot_me_2019 <- prelevements_2019 %>%
+  st_join(bv_me_decoup, 
+          largest = T) %>%
+  distinct()
+
+me_prelevements_tot_2019 <- prelevements_tot_me_2019 %>%
+  group_by(cdeumassed) %>%
+  summarise(prel_2019_tot = sum(VOLUME)) %>%
+  select(cdeumassed,
+         prel_2019_tot) %>%
+  sf::st_drop_geometry() 
+
+bv_me_decoup <- bv_me_decoup %>%
+  left_join(y = me_prelevements_tot_2019)
+
+sf::write_sf(obj = bv_me_decoup, dsn = "data/outputs/bv_me_decoup_20231201.gpkg")
 
 ## Synthèse des prélèvements en retenue par commune ----
 
@@ -1415,6 +1609,11 @@ com_prelevements <- prelevements_com %>%
 
 communes_test <- communes %>%
   left_join(y = com_prelevements)
+
+# Création de l'indicateur "vulnerabilite_captage" ----
+
+bv_me_decoup <- bv_me_decoup %>%
+  mutate(pourcentage_captage_retenue_2013 = prel_2013_ret*100/prel_2013_tot)
 
 # Synthèse des résultats de la couche communes aux couches départements et régions ----
 
@@ -1537,13 +1736,23 @@ troncons_topage_plus_proches <-
   sf::read_sf(dsn = "data/outputs/troncons_topage_plus_proches.gpkg")
 
 # Synthèse volume prelevements par ME (INCLUS DS REGION) SAGE, dprt, region ----
-Toto prelevements
-Uniquement en retenue
+
+
 
 # brouillon ----
 
-pe <- pe %>%
-  select(starts_with("prel"))
+bv_me_decoup <- bv_me_decoup %>%
+  select(-prel_2018_ret, 
+         -prel_2008_tot, 
+         -prel_2009_tot, 
+         -prel_2010_tot, 
+         -prel_2011_tot, 
+         -prel_2012_tot, 
+         -prel_2013_tot, 
+         -prel_2014_tot,
+         -prel_2015_tot, 
+         -prel_2016_tot, 
+         -prel_2019_tot)
 
 bv_me_decoup <- bv_me_decoup %>%
   select(-starts_with("nb_"), -starts_with("surf_"), -starts_with("longueur_"), -starts_with("surface_moy"))
