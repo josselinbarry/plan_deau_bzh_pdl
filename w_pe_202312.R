@@ -59,7 +59,33 @@ bv_ipr <- sf::read_sf(dsn = "data/bv_ipr_metrique.gpkg") %>%
 
 lineaire_topage_pe <- sf::read_sf(dsn = "data/outputs/lineaires_topage_pe.gpkg")
 
-## Calcul des linéaires topages par me ----
+ce_topage_me <- sf::read_sf(dsn = "data/outputs/intersection_topage_me_20231128.gpkg")
+
+ce_topage_ipr <- sf::read_sf(dsn = "data/outputs/ce_topage_ipr_20231200.gpkg")
+
+ce_topage_sage <- sf::read_sf(dsn = "data/outputs/intersection_topage_sage_20231128.gpkg")
+
+ce_topage_com <- sf::read_sf(dsn = "data/outputs/intersection_topage_commune_20231128.gpkg")
+
+qa_me <- sf::read_sf(dsn = "data/outputs/qa_me_20231200.gpkg")
+qa_sage <- sf::read_sf(dsn = "data/outputs/qa_sage_20231200.gpkg")
+qa_com <- sf::read_sf(dsn = "data/outputs/qa_com_20231200.gpkg")
+qa_ipr <- sf::read_sf(dsn = "data/outputs/qa_ipr_20231200.gpkg")
+q5_me <- sf::read_sf(dsn = "data/outputs/q5_me_20231200.gpkg")
+q5_sage <- sf::read_sf(dsn = "data/outputs/q5_sage_20231200.gpkg")
+q5_com <- sf::read_sf(dsn = "data/outputs/q5_com_20231200.gpkg")
+q5_ipr <- sf::read_sf(dsn = "data/outputs/q5_ipr_20231200.gpkg")
+
+qa <- sf::read_sf(dsn = "data/qa_zone_etude.gpkg") %>%
+  select(ID_BDCARTH, QABASN, QAMOY_MN, QAHAUN) %>%
+  st_transform(crs = 2154)
+
+q5 <- sf::read_sf(dsn = "data/q5_zone_etude.gpkg") %>%
+  select(ID_BDCARTH, Q5BASN, Q5MOY_MN, Q5HAUN) %>%
+  mutate(ID_BDCARTH = as.character(ID_BDCARTH)) %>%
+  st_transform(crs = 2154)
+
+## Calcul des linéaires topages et strahler max par me ----
 
 ce_topage_me <- ce_topage %>% 
   st_intersection(bv_me_decoup) %>% # découpage des ce selon les masses d'eau
@@ -69,10 +95,11 @@ sf::write_sf(obj = ce_topage_me, dsn = "data/outputs/intersection_topage_me_2023
 
 ce_decoup_me <- ce_topage_me %>%
   st_drop_geometry() %>%
-  select(cdoh_ce, cdeumassed, longueur_intersect) %>%
+  select(cdoh_ce, cdeumassed, longueur_intersect, StreamOrde) %>%
   group_by(cdeumassed) %>%
-  summarise(longueur_ce_topage = sum(longueur_intersect)) %>%
-  select(cdeumassed, longueur_ce_topage)
+  summarise(strahler_max = max (StreamOrde),
+            longueur_ce_topage = sum(longueur_intersect)) %>%
+  select(cdeumassed, strahler_max,longueur_ce_topage)
 
 ce_tdbv_decoup_me <- ce_topage_me %>% 
   st_drop_geometry() %>%
@@ -82,7 +109,7 @@ ce_tdbv_decoup_me <- ce_topage_me %>%
   summarise(longueur_ce_tdbv_topage = sum(longueur_intersect)) %>%
   select(cdeumassed, longueur_ce_tdbv_topage)
 
-## Calcul des linéaires topages par sage ----
+## Calcul des linéaires topages et strahler max par sage ----
 
 ce_topage_sage <- ce_topage %>% 
   st_intersection(sages) %>% # découpage des ce selon les masses d'eau
@@ -92,10 +119,11 @@ sf::write_sf(obj = ce_topage_sage, dsn = "data/outputs/intersection_topage_sage_
 
 ce_decoup_sage <- ce_topage_sage %>%
   st_drop_geometry() %>%
-  select(cdoh_ce, nom_sage, longueur_intersect) %>%
+  select(cdoh_ce, nom_sage, longueur_intersect, StreamOrde) %>%
   group_by(nom_sage) %>%
-  summarise(longueur_ce_topage = sum(longueur_intersect)) %>%
-  select(nom_sage, longueur_ce_topage)
+  summarise(strahler_max = max (StreamOrde),
+            longueur_ce_topage = sum(longueur_intersect)) %>%
+  select(nom_sage, strahler_max, longueur_ce_topage)
 
 ce_tdbv_decoup_sage <- ce_topage_sage %>%
   filter(StreamOrde == 1 | StreamOrde == 2) %>%
@@ -105,7 +133,7 @@ ce_tdbv_decoup_sage <- ce_topage_sage %>%
   summarise(longueur_ce_tdbv_topage = sum(longueur_intersect)) %>%
   select(nom_sage, longueur_ce_tdbv_topage)
 
-## Calcul des linéaires topages par commune ----
+## Calcul des linéaires topages et strahler max par commune ----
 
 ce_topage_com <- ce_topage %>% 
   st_intersection(communes) %>% # découpage des ce selon les masses d'eau
@@ -115,10 +143,11 @@ sf::write_sf(obj = ce_topage_com, dsn = "data/outputs/intersection_topage_commun
 
 ce_decoup_com <- ce_topage_com %>%
   st_drop_geometry() %>%
-  select(cdoh_ce, code_insee, longueur_intersect) %>%
+  select(cdoh_ce, code_insee, longueur_intersect, StreamOrde) %>%
   group_by(code_insee) %>%
-  summarise(longueur_ce_topage = sum(longueur_intersect)) %>%
-  select(code_insee, longueur_ce_topage)
+  summarise(strahler_max = max (StreamOrde),
+            longueur_ce_topage = sum(longueur_intersect)) %>%
+  select(code_insee, strahler_max, longueur_ce_topage)
 
 ce_tdbv_decoup_com <- ce_topage_com %>%
   filter(StreamOrde == 1 | StreamOrde == 2) %>%
@@ -128,7 +157,7 @@ ce_tdbv_decoup_com <- ce_topage_com %>%
   summarise(longueur_ce_tdbv_topage = sum(longueur_intersect)) %>%
   select(code_insee, longueur_ce_tdbv_topage)
 
-## Calcul des linéaires topages par bv ipr ----
+## Calcul des linéaires topages et strahler max par bv ipr ----
 
 ce_topage_ipr <- ce_topage %>% 
   st_intersection(bv_ipr) %>% # découpage des ce selon les masses d'eau
@@ -138,10 +167,11 @@ ce_topage_ipr <- ce_topage %>%
 sf::write_sf(obj = ce_topage_ipr, dsn = "data/outputs/ce_topage_ipr_20231200.gpkg")
 
 ce_decoup_ipr <- ce_topage_ipr %>%
-  select(cdoh_ce, sta_code_sandre, longueur_intersect) %>%
+  select(cdoh_ce, sta_code_sandre, longueur_intersect, StreamOrde) %>%
   group_by(sta_code_sandre) %>%
-  summarise(longueur_ce_topage = sum(longueur_intersect)) %>%
-  select(sta_code_sandre, longueur_ce_topage)
+  summarise(strahler_max = max (StreamOrde),
+            longueur_ce_topage = sum(longueur_intersect)) %>%
+  select(sta_code_sandre, strahler_max, longueur_ce_topage)
 
 ce_tdbv_decoup_ipr <- ce_topage_ipr %>%
   filter(StreamOrde == 1 | StreamOrde == 2) %>%
@@ -173,8 +203,7 @@ bv_ipr <- bv_ipr %>%
 lineaire_topage_pe_me <- lineaire_topage_pe %>% 
   filter(mare == 0) %>%
   st_intersection(bv_me_decoup) %>% 
-  mutate(longueur_intersect = st_length(.)) %>%
-  select(cdeumassed, cdoh_plando, Persistanc, zone_marais, longueur_intersect) 
+  mutate(longueur_intersect = st_length(.))  
 
 lineaire_topage_pe_tot_me <- lineaire_topage_pe_me %>% 
   st_drop_geometry() %>%
@@ -188,6 +217,13 @@ lineaire_topage_pehm_tot_me <- lineaire_topage_pe_me %>%
   group_by(cdeumassed) %>%
   summarise(longueur_topage_intersecte_pehm_tot = sum(longueur_intersect)) %>%
   select(cdeumassed, longueur_topage_intersecte_pehm_tot)
+
+lineaire_topage_pehm_tdbv_tot_me <- lineaire_topage_pe_me %>% 
+  filter(zone_marais == 0 & StreamOrde < 3) %>%  
+  st_drop_geometry() %>%
+  group_by(cdeumassed) %>%
+  summarise(longueur_topage_intersecte_pehm_tdbv_tot = sum(longueur_intersect)) %>%
+  select(cdeumassed, longueur_topage_intersecte_pehm_tdbv_tot)
 
 lineaire_topage_pe_perm_me <- lineaire_topage_pe_me %>% 
   filter(Persistanc == "permanent") %>%  
@@ -203,21 +239,31 @@ lineaire_topage_pehm_perm_me <- lineaire_topage_pe_me %>%
   summarise(longueur_topage_intersecte_pehm_perm = sum(longueur_intersect)) %>%
   select(cdeumassed, longueur_topage_intersecte_pehm_perm)
 
+lineaire_topage_pehm_tdbv_perm_me <- lineaire_topage_pe_me %>% 
+  filter(zone_marais == 0 & Persistanc == "permanent" & StreamOrde < 3) %>%  
+  st_drop_geometry() %>%
+  group_by(cdeumassed) %>%
+  summarise(longueur_topage_intersecte_pehm_tdbv_perm = sum(longueur_intersect)) %>%
+  select(cdeumassed, longueur_topage_intersecte_pehm_tdbv_perm)
+
 ## Jointure des linéaires topages intersectés par me ----
 
 bv_me_decoup <- bv_me_decoup %>%
   dplyr::left_join(lineaire_topage_pe_tot_me) %>%
   dplyr::left_join(lineaire_topage_pehm_tot_me) %>%
+  dplyr::left_join(lineaire_topage_pehm_tdbv_tot_me) %>%
   dplyr::left_join(lineaire_topage_pe_perm_me) %>%
-  dplyr::left_join(lineaire_topage_pehm_perm_me)
+  dplyr::left_join(lineaire_topage_pehm_perm_me) %>%
+  dplyr::left_join(lineaire_topage_pehm_tdbv_perm_me)
+
+sf::write_sf(obj = bv_me_decoup, dsn = "data/outputs/bv_me_decoup_20231201.gpkg")
 
 ## Calcul des linéaires topages intersectés par sage ----
 
 lineaire_topage_pe_sage <- lineaire_topage_pe %>% 
   filter(mare == 0) %>%
   st_intersection(sages) %>% 
-  mutate(longueur_intersect = st_length(.)) %>%
-  select(nom_sage, cdoh_plando, Persistanc, zone_marais, longueur_intersect) 
+  mutate(longueur_intersect = st_length(.)) 
 
 lineaire_topage_pe_tot_sage <- lineaire_topage_pe_sage %>% 
   st_drop_geometry() %>%
@@ -231,6 +277,13 @@ lineaire_topage_pehm_tot_sage <- lineaire_topage_pe_sage %>%
   group_by(nom_sage) %>%
   summarise(longueur_topage_intersecte_pehm_tot = sum(longueur_intersect)) %>%
   select(nom_sage, longueur_topage_intersecte_pehm_tot)
+
+lineaire_topage_pehm_tdbv_tot_sage <- lineaire_topage_pe_sage %>% 
+  filter(zone_marais == 0 & StreamOrde < 3) %>%  
+  st_drop_geometry() %>%
+  group_by(nom_sage) %>%
+  summarise(longueur_topage_intersecte_pehm_tdbv_tot = sum(longueur_intersect)) %>%
+  select(nom_sage, longueur_topage_intersecte_pehm_tdbv_tot)
 
 lineaire_topage_pe_perm_sage <- lineaire_topage_pe_sage %>% 
   filter(Persistanc == "permanent") %>%  
@@ -246,21 +299,31 @@ lineaire_topage_pehm_perm_sage <- lineaire_topage_pe_sage %>%
   summarise(longueur_topage_intersecte_pehm_perm = sum(longueur_intersect)) %>%
   select(nom_sage, longueur_topage_intersecte_pehm_perm)
 
+lineaire_topage_pehm_tdbv_perm_sage <- lineaire_topage_pe_sage %>% 
+  filter(zone_marais == 0 & Persistanc == "permanent" & StreamOrde <3) %>%  
+  st_drop_geometry() %>%
+  group_by(nom_sage) %>%
+  summarise(longueur_topage_intersecte_pehm_tdbv_perm = sum(longueur_intersect)) %>%
+  select(nom_sage, longueur_topage_intersecte_pehm_tdbv_perm)
+
 ## Jointure des linéaires topages intersectés par sage ----
 
 sages <- sages %>%
   dplyr::left_join(lineaire_topage_pe_tot_sage, join_by(nom_sage == nom_sage)) %>%
   dplyr::left_join(lineaire_topage_pehm_tot_sage, join_by(nom_sage == nom_sage)) %>%
+  dplyr::left_join(lineaire_topage_pehm_tdbv_tot_sage, join_by(nom_sage == nom_sage)) %>%
   dplyr::left_join(lineaire_topage_pe_perm_sage, join_by(nom_sage == nom_sage)) %>%
-  dplyr::left_join(lineaire_topage_pehm_perm_sage, join_by(nom_sage == nom_sage))
+  dplyr::left_join(lineaire_topage_pehm_perm_sage, join_by(nom_sage == nom_sage)) %>%
+  dplyr::left_join(lineaire_topage_pehm_tdbv_perm_sage, join_by(nom_sage == nom_sage))
+
+sf::write_sf(obj = sages, dsn = "data/outputs/sages_20231201.gpkg")
 
 ## Calcul des linéaires topages intersectés par commune ----
 
 lineaire_topage_pe_com <- lineaire_topage_pe %>% 
   filter(mare == 0) %>%
   st_intersection(communes) %>% 
-  mutate(longueur_intersect = st_length(.)) %>%
-  select(code_insee, cdoh_plando, Persistanc, zone_marais, longueur_intersect) 
+  mutate(longueur_intersect = st_length(.)) 
 
 lineaire_topage_pe_tot_com <- lineaire_topage_pe_com %>% 
   st_drop_geometry() %>%
@@ -274,6 +337,13 @@ lineaire_topage_pehm_tot_com <- lineaire_topage_pe_com %>%
   group_by(code_insee) %>%
   summarise(longueur_topage_intersecte_pehm_tot = sum(longueur_intersect)) %>%
   select(code_insee, longueur_topage_intersecte_pehm_tot)
+
+lineaire_topage_pehm_tdbv_tot_com <- lineaire_topage_pe_com %>% 
+  filter(zone_marais == 0 & StreamOrde <3) %>%  
+  st_drop_geometry() %>%
+  group_by(code_insee) %>%
+  summarise(longueur_topage_intersecte_pehm_tdbv_tot = sum(longueur_intersect)) %>%
+  select(code_insee, longueur_topage_intersecte_pehm_tdbv_tot)
 
 lineaire_topage_pe_perm_com <- lineaire_topage_pe_com %>% 
   filter(Persistanc == "permanent") %>%  
@@ -289,21 +359,31 @@ lineaire_topage_pehm_perm_com <- lineaire_topage_pe_com %>%
   summarise(longueur_topage_intersecte_pehm_perm = sum(longueur_intersect)) %>%
   select(code_insee, longueur_topage_intersecte_pehm_perm)
 
+lineaire_topage_pehm_tdbv_perm_com <- lineaire_topage_pe_com %>% 
+  filter(zone_marais == 0 & Persistanc == "permanent" & StreamOrde <3) %>%  
+  st_drop_geometry() %>%
+  group_by(code_insee) %>%
+  summarise(longueur_topage_intersecte_pehm_tdbv_perm = sum(longueur_intersect)) %>%
+  select(code_insee, longueur_topage_intersecte_pehm_tdbv_perm)
+
 ## Jointure des linéaires topages intersectés par commune ----
 
 communes <- communes %>%
   dplyr::left_join(lineaire_topage_pe_tot_com, join_by(code_insee == code_insee)) %>%
   dplyr::left_join(lineaire_topage_pehm_tot_com, join_by(code_insee == code_insee)) %>%
+  dplyr::left_join(lineaire_topage_pehm_tdbv_tot_com, join_by(code_insee == code_insee)) %>%
   dplyr::left_join(lineaire_topage_pe_perm_com, join_by(code_insee == code_insee)) %>%
-  dplyr::left_join(lineaire_topage_pehm_perm_com, join_by(code_insee == code_insee))
+  dplyr::left_join(lineaire_topage_pehm_perm_com, join_by(code_insee == code_insee)) %>%
+  dplyr::left_join(lineaire_topage_pehm_tdbv_perm_com, join_by(code_insee == code_insee))
+
+sf::write_sf(obj = communes, dsn = "data/outputs/communes_20231201.gpkg")
 
 ## Calcul des linéaires topages intersectés par bv ipr ----
 
 lineaire_topage_pe_ipr <- lineaire_topage_pe %>% 
   filter(mare == 0) %>%
   st_intersection(bv_ipr) %>% 
-  mutate(longueur_intersect = st_length(.)) %>%
-  select(sta_code_sandre, cdoh_plando, Persistanc, zone_marais, longueur_intersect) 
+  mutate(longueur_intersect = st_length(.)) 
 
 lineaire_topage_pe_tot_ipr <- lineaire_topage_pe_ipr %>% 
   st_drop_geometry() %>%
@@ -317,6 +397,13 @@ lineaire_topage_pehm_tot_ipr <- lineaire_topage_pe_ipr %>%
   group_by(sta_code_sandre) %>%
   summarise(longueur_topage_intersecte_pehm_tot = sum(longueur_intersect)) %>%
   select(sta_code_sandre, longueur_topage_intersecte_pehm_tot)
+
+lineaire_topage_pehm_tdbv_tot_ipr <- lineaire_topage_pe_ipr %>% 
+  filter(zone_marais == 0 & StreamOrde <3) %>%  
+  st_drop_geometry() %>%
+  group_by(sta_code_sandre) %>%
+  summarise(longueur_topage_intersecte_pehm_tdbv_tot = sum(longueur_intersect)) %>%
+  select(sta_code_sandre, longueur_topage_intersecte_pehm_tdbv_tot)
 
 lineaire_topage_pe_perm_ipr <- lineaire_topage_pe_ipr %>% 
   filter(Persistanc == "permanent") %>%  
@@ -332,13 +419,24 @@ lineaire_topage_pehm_perm_ipr <- lineaire_topage_pe_ipr %>%
   summarise(longueur_topage_intersecte_pehm_perm = sum(longueur_intersect)) %>%
   select(sta_code_sandre, longueur_topage_intersecte_pehm_perm)
 
+lineaire_topage_pehm_tdbv_perm_ipr <- lineaire_topage_pe_ipr %>% 
+  filter(zone_marais == 0 & Persistanc == "permanent" & StreamOrde <3) %>%  
+  st_drop_geometry() %>%
+  group_by(sta_code_sandre) %>%
+  summarise(longueur_topage_intersecte_pehm_tdbv_perm = sum(longueur_intersect)) %>%
+  select(sta_code_sandre, longueur_topage_intersecte_pehm_tdbv_perm)
+
 ## Jointure des linéaires topages intersectés par bv ipr ----
 
 bv_ipr <- bv_ipr %>%
   dplyr::left_join(lineaire_topage_pe_tot_ipr) %>%
   dplyr::left_join(lineaire_topage_pehm_tot_ipr) %>%
+  dplyr::left_join(lineaire_topage_pehm_tdbv_tot_ipr) %>%
   dplyr::left_join(lineaire_topage_pe_perm_ipr) %>%
-  dplyr::left_join(lineaire_topage_pehm_perm_ipr)
+  dplyr::left_join(lineaire_topage_pehm_perm_ipr) %>%
+  dplyr::left_join(lineaire_topage_pehm_tdbv_perm_ipr)
+
+sf::write_sf(obj = bv_ipr, dsn = "data/outputs/bv_ipr_20231201.gpkg")
 
 ## Décompte et calcul des surfaces cumulées de PE par BV ME ----
 
@@ -503,7 +601,7 @@ bv_me_decoup <- bv_me_decoup %>%
   dplyr::left_join(surf_pehm_sur_cours_perm_me) %>%
   units::drop_units()
 
-sf::write_sf(obj = bv_me_decoup, dsn = "data/outputs/bv_me_decoup_20231200.gpkg")
+sf::write_sf(obj = bv_me_decoup, dsn = "data/outputs/bv_me_decoup_20231201.gpkg")
 
 ## Décompte et calcul des surfaces cumulées de PE par sage ----
 
@@ -669,7 +767,7 @@ sages <- sages %>%
   dplyr::left_join(surf_pehm_sur_cours_perm_sage) %>%
   units::drop_units()
 
-sf::write_sf(obj = sages, dsn = "data/outputs/sages_20231200.gpkg")
+sf::write_sf(obj = sages, dsn = "data/outputs/sages_20231201.gpkg")
 
 ## Décompte et calcul des surfaces cumulées de PE par commune ----
 
@@ -835,7 +933,7 @@ communes <- communes %>%
   dplyr::left_join(surf_pehm_sur_cours_perm_com) %>%
   units::drop_units()
 
-sf::write_sf(obj = communes, dsn = "data/outputs/communes_20231200.gpkg")
+sf::write_sf(obj = communes, dsn = "data/outputs/communes_20231201.gpkg")
 
 ## Décompte et calcul des surfaces cumulées de PE par BV IPR ----
 
@@ -1000,7 +1098,7 @@ bv_ipr <- bv_ipr %>%
   dplyr::left_join(surf_pehm_sur_cours_perm_ipr) %>%
   units::drop_units()
 
-sf::write_sf(obj = bv_ipr, dsn = "data/outputs/bv_ipr_20231200.gpkg")
+sf::write_sf(obj = bv_ipr, dsn = "data/outputs/bv_ipr_20231201.gpkg")
 
 
 ## Calcul et jointure de la surface moyenne des PE permanents par ME ----
@@ -1023,7 +1121,7 @@ bv_me_decoup <- bv_me_decoup %>%
   left_join(surface_moyenne_pe_me) %>%
   left_join(surface_moyenne_pe_tdbv_me)
 
-sf::write_sf(obj = bv_me_decoup, dsn = "data/outputs/bv_me_decoup_20231200.gpkg")
+sf::write_sf(obj = bv_me_decoup, dsn = "data/outputs/bv_me_decoup_20231201.gpkg")
 
 ## Calcul et jointure de la surface moyenne des PE permanents par sage ----
 
@@ -1045,7 +1143,7 @@ sages <- sages %>%
   left_join(surface_moyenne_pe_sage) %>%
   left_join(surface_moyenne_pe_tdbv_sage)
 
-sf::write_sf(obj = sages, dsn = "data/outputs/sages_20231200.gpkg")
+sf::write_sf(obj = sages, dsn = "data/outputs/sages_20231201.gpkg")
 
 ## Calcul et jointure de la surface moyenne des PE permanents par commune ----
 
@@ -1067,7 +1165,157 @@ communes <- communes %>%
   left_join(surface_moyenne_pe_com) %>%
   left_join(surface_moyenne_pe_tdbv_com)
 
-sf::write_sf(obj = communes, dsn = "data/outputs/communes_20231200.gpkg")
+sf::write_sf(obj = communes, dsn = "data/outputs/communes_20231201.gpkg")
+
+## Calcul et jointure de la surface moyenne des PE permanents par bv_ipr ----
+
+surface_moyenne_pe_ipr <- pe_decoup_ipr %>%
+  filter(mare == 0 & zone_marais == 0 & Persistanc == 'permanent') %>%
+  group_by(sta_code_sandre) %>%
+  summarise(surface_moy_pe_perm = mean(surface_m2)) %>%
+  st_drop_geometry() %>%
+  select(sta_code_sandre, surface_moy_pe_perm)
+
+surface_moyenne_pe_tdbv_ipr <- pe_decoup_ipr %>%
+  filter(mare == 0 & zone_marais == 0 & Persistanc == 'permanent' & StreamOrde < 3) %>%
+  group_by(sta_code_sandre) %>%
+  summarise(surface_moy_pe_perm_tdbv = mean(surface_m2)) %>%
+  st_drop_geometry() %>%
+  select(sta_code_sandre, surface_moy_pe_perm_tdbv)
+
+bv_ipr <- bv_ipr %>%
+  left_join(surface_moyenne_pe_ipr) %>%
+  left_join(surface_moyenne_pe_tdbv_ipr)
+
+sf::write_sf(obj = bv_ipr, dsn = "data/outputs/bv_ipr_20231201.gpkg")
+
+## Calcul des débits max par ME ----
+
+qa_me <- qa %>% 
+  st_intersection(bv_me_decoup) %>%
+  st_drop_geometry() 
+
+sf::write_sf(obj = qa_me, dsn = "data/outputs/qa_me_20231200.gpkg")
+
+qa_max_me <- qa_me %>%
+  select(cdeumassed, QABASN, QAMOY_MN, QAHAUN) %>%
+  group_by(cdeumassed) %>%
+  summarise(QAMOY_max = max (QAMOY_MN)) %>%
+  select(cdeumassed, QAMOY_max)
+
+q5_me <- q5 %>% 
+  st_intersection(bv_me_decoup) %>%
+  st_drop_geometry() 
+
+sf::write_sf(obj = q5_me, dsn = "data/outputs/q5_me_20231200.gpkg")
+
+q5_max_me <- q5_me %>%
+  select(cdeumassed, Q5BASN, Q5MOY_MN, Q5HAUN) %>%
+  group_by(cdeumassed) %>%
+  summarise(Q5MOY_max = max (Q5MOY_MN)) %>%
+  select(cdeumassed, Q5MOY_max)
+
+bv_me_decoup <- bv_me_decoup %>%
+  left_join(qa_max_me) %>%
+  left_join(q5_max_me)
+
+sf::write_sf(obj = bv_me_decoup, dsn = "data/outputs/bv_me_decoup_20231201.gpkg")
+
+## Calcul des débits max par sage ----
+
+qa_sage <- qa %>% 
+  st_intersection(sages) %>%
+  st_drop_geometry() 
+
+sf::write_sf(obj = qa_sage, dsn = "data/outputs/qa_sage_20231200.gpkg")
+
+qa_max_sage <- qa_sage %>%
+  select(nom_sage, QABASN, QAMOY_MN, QAHAUN) %>%
+  group_by(nom_sage) %>%
+  summarise(QAMOY_max = max (QAMOY_MN)) %>%
+  select(nom_sage, QAMOY_max)
+
+q5_sage <- q5 %>% 
+  st_intersection(sages) %>%
+  st_drop_geometry() 
+
+sf::write_sf(obj = q5_sage, dsn = "data/outputs/q5_sage_20231200.gpkg")
+
+q5_max_sage <- q5_sage %>%
+  select(nom_sage, Q5BASN, Q5MOY_MN, Q5HAUN) %>%
+  group_by(nom_sage) %>%
+  summarise(Q5MOY_max = max (Q5MOY_MN)) %>%
+  select(nom_sage, Q5MOY_max)
+
+sages <- sages %>%
+  left_join(qa_max_sage) %>%
+  left_join(q5_max_sage)
+
+sf::write_sf(obj = sages, dsn = "data/outputs/sages_20231201.gpkg")
+
+## Calcul des débits max par commune ----
+
+qa_com <- qa %>% 
+  st_intersection(communes) %>%
+  st_drop_geometry() 
+
+sf::write_sf(obj = qa_com, dsn = "data/outputs/qa_com_20231200.gpkg")
+
+qa_max_com <- qa_com %>%
+  select(code_insee, QABASN, QAMOY_MN, QAHAUN) %>%
+  group_by(code_insee) %>%
+  summarise(QAMOY_max = max (QAMOY_MN)) %>%
+  select(code_insee, QAMOY_max)
+
+q5_com <- q5 %>% 
+  st_intersection(communes) %>%
+  st_drop_geometry() 
+
+sf::write_sf(obj = q5_com, dsn = "data/outputs/q5_com_20231200.gpkg")
+
+q5_max_com <- q5_com %>%
+  select(code_insee, Q5BASN, Q5MOY_MN, Q5HAUN) %>%
+  group_by(code_insee) %>%
+  summarise(Q5MOY_max = max (Q5MOY_MN)) %>%
+  select(code_insee, Q5MOY_max)
+
+communes <- communes %>%
+  left_join(qa_max_com) %>%
+  left_join(q5_max_com)
+
+sf::write_sf(obj = communes, dsn = "data/outputs/communes_20231201.gpkg")
+
+## Calcul des débits max par bv ipr ----
+
+qa_ipr <- qa %>% 
+  st_intersection(bv_ipr) %>%
+  st_drop_geometry() 
+
+sf::write_sf(obj = qa_ipr, dsn = "data/outputs/qa_ipr_20231200.gpkg")
+
+qa_max_ipr <- qa_ipr %>%
+  select(sta_code_sandre, QABASN, QAMOY_MN, QAHAUN) %>%
+  group_by(sta_code_sandre) %>%
+  summarise(QAMOY_max = max (QAMOY_MN)) %>%
+  select(sta_code_sandre, QAMOY_max)
+
+q5_ipr <- q5 %>% 
+  st_intersection(bv_ipr) %>%
+  st_drop_geometry() 
+
+sf::write_sf(obj = q5_ipr, dsn = "data/outputs/q5_ipr_20231200.gpkg")
+
+q5_max_ipr <- q5_ipr %>%
+  select(sta_code_sandre, Q5BASN, Q5MOY_MN, Q5HAUN) %>%
+  group_by(sta_code_sandre) %>%
+  summarise(Q5MOY_max = max (Q5MOY_MN)) %>%
+  select(sta_code_sandre, Q5MOY_max)
+
+bv_ipr <- bv_ipr %>%
+  left_join(qa_max_ipr) %>%
+  left_join(q5_max_ipr)
+
+sf::write_sf(obj = bv_ipr, dsn = "data/outputs/bv_ipr_20231201.gpkg")
 
 ## Synthèse des prélèvements en retenue par ME ----
 
@@ -1194,6 +1442,10 @@ save(lineaire_topage_pe_me,
      pe_decoup_ipr,
      pe,
      ce_topage,
+     ce_topage_me,
+     ce_topage_sage,
+     ce_topage_com,
+     ce_topage_ipr,
      bv_me_decoup,
      sages, 
      communes,
@@ -1220,12 +1472,15 @@ pe <- pe %>%
   select(starts_with("prel"))
 
 bv_me_decoup <- bv_me_decoup %>%
-  select(-starts_with("nb_"), -starts_with("surf_"))
+  select(-starts_with("nb_"), -starts_with("surf_"), -starts_with("longueur_"), -starts_with("surface_moy"))
 
 sages <- sages %>%
-  select(-surface_moy_pe_perm, -surface_moy_pe_perm_tdbv)
+  select(-starts_with("nb_"), -starts_with("surf_"), -starts_with("longueur_"), -starts_with("surface_moy"))
 
-bv_me_decoup <- bv_me_decoup %>%
-  select(-surface_moy_pe, -surface_moy_pe_tdbv)
+bv_ipr <- bv_ipr %>%
+  select(-starts_with("nb_"), -starts_with("surf_"), -starts_with("longueur_"), -starts_with("surface_moy"))
+
+communes <- communes %>%
+  select(-starts_with("nb_"), -starts_with("surf_"), -starts_with("longueur_"), -starts_with("surface_moy"))
 
 

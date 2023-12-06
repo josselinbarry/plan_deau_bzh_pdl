@@ -60,15 +60,16 @@ Les couches de territoires retenues sont les suivantes :
     -	**strahler_max** : rang de stahler maximum rencontré sur l'entité
  
 - Une partie de ce script permet de synthétiser les variables des couches de débit :
-    -	**qa_moy_max** : module maximal rencontré sur l'entité
-    -	**q5_moy_max** : qmna5 maximal rencontré sur l'entité
+    -	**qa_moy_max** (L/s) : module maximal rencontré sur l'entité
+    -	**q5_moy_max** (L/s) : qmna5 maximal rencontré sur l'entité
    
 -	Une partie de ce script consiste à synthétiser les variables de la couche plan d’eau par entité de territoire :
-    -	**longueur_topage_intersecte_pe_tot** : somme des linéaires de tronçons de la BD Topage intercepté par des PE.
-    -	**longueur_topage_intersecte_pehm_tot** : somme des linéaires de tronçons de la BD Topage intercepté par des PE (hors marais).
-    -	**longueur_topage_intersecte_pe_perm** : somme des linéaires de tronçons de la BD Topage intercepté par des PE permanents.
-    -	**longueur_topage_intersecte_pehm_perm** : somme des linéaires de tronçons de la BD Topage intercepté par des PE permanents (hors marais)
-    -	MANQUE ? Somme des linéaires de tronçons de la BD Topage intercepté par des PE permanents (hors marais) en TDBV.
+    -	**longueur_topage_intersecte_pe_tot** : somme des linéaires de tronçons de la BD Topage interceptés par des PE.
+    -	**longueur_topage_intersecte_pehm_tot** : somme des linéaires de tronçons de la BD Topage interceptés par des PE (hors marais).
+    -	**longueur_topage_intersecte_pehm_tdbv_tot** : somme des linéaires de tronçons de la BD Topage interceptés par des PE (hors marais) en TDBV.
+    -	**longueur_topage_intersecte_pe_perm** : somme des linéaires de tronçons de la BD Topage interceptés par des PE permanents.
+    -	**longueur_topage_intersecte_pehm_perm** : somme des linéaires de tronçons de la BD Topage interceptés par des PE permanents (hors marais)
+    -	**longueur_topage_intersecte_pehm_tdbv_perm** : somme des linéaires de tronçons de la BD Topage interceptés par des PE permanents (hors marais) en TDBV.
     -	**nb_pe_tot** et **surf_pe_tot** : décompte et somme des surfaces des PE
     -	**nb_pehm_tot** et **surf_pehm_tot** : décompte et somme des surfaces des PE (hors marais)
     -	**nb_pe_perm** et **surf_pe_perm** : décompte et somme des surfaces des PE permanents
