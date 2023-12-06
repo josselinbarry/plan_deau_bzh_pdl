@@ -30,19 +30,26 @@ En second lieu, étudier les liens de corrélation entre ces variables d’impla
     - **zone_humide_potentielle** (0/1) : intersection avec la couche des zones humides potentielles
     - **distance_topage** (m) : calcul de la distance des plans d'eau aux tronçons de la BD TOPAGE et affectation des valeurs attributaires (la BD Topage a été préalablement analysée afin de calculer le rang de Strahler de chacun des tronçons(**StreamOrde**))
     - **longueur_topage_intercepte** (m) : calcul du linéaire de tronçons BD Topage interceptés
-    - **distance_carthage** (m) : calcul de la distance aux tronçons de la BD CARTHAGE et affectation des valeurs attributaires de débit (module et qmna5 issus de la carte des consensus XXX).
+    - **distance_carthage** (m) : calcul de la distance aux tronçons de la BD CARTHAGE et affectation des valeurs attributaires de débit (module et qmna5 issus de la carte des consensus https://geo.data.gouv.fr/fr/datasets/8bcfa132902a0b35747656cf802f3a8616e0cc92)
     - **distance_source** (m) : calcul de la distance aux sources de la couche noeuds hydrographiques de la BD TOPAGE
     - **connecte_lh** (0/1) : intersection du plan d'eau avec le linéaire hydroagraphique de la BD Topage
     - **connecte_nappe** (0/1) : intersection du plan d'eau avec les zones d'alluvions et certaines de zones de colluvions de la BD CHARM (XXX)
     - **connecte_source** (0/1) : plan d'eau situé à 50m maximum d'une source
     - **connecte_rh** (0/1) : si la plan d'eau est connecté au linéaire hydrographique, à une source ou à la nappe
     - **lithologie_simplifiée** : jointure spatiale de la couche "Carte lithologique simplifiée au 1/1 000 000" au centroïde du plan d'eau (couche issue du flux WMS du BRGM : http://geoservices.brgm.fr/geologie)
-    - **géologie** :  jointure spatiale de la géologie BD CHARM
+    - **géologie** :  jointure spatiale de la géologie issue de la BD CHARM
     - **distance_roe** (m) : calcul de la distance aux ouvrages du ROE et affectation des principales valeurs attributaires des ouvrages situées à 20m maximum
     - **prelevements** : somme des volumes des prélèvements situés à 20m maximum du plan d'eau
     - **thermie** : A FAIRE
 
 **2. Un second script permet de constituer les couches de territoire (bassin versant des masses d’eau, SAGE, communes, bassin versant amont des stations de prélèvement IPR)** :
+
+Les couches de territoires retenues sont les suivantes : 
+
+- **sages** : couche des SAGE issue de Gest'Eau (https://www.gesteau.fr/sites/default/files/geo/ZIP/sage_metrople-shp.zip).
+- **communes** : couche des communes issue de la BD TOPO V3 depuis le flux WFS de l'IGN (https://data.geopf.fr/wfs/ows?VERSION=2.0.0)
+- **bv_ipr** : numérisation des BV amonts des stations de prélèvement piscicoles à partir de r.watershed et r.wateroutlet du logiciel GRASS
+- **bv_decoup_me** : découpage de la couche des bassins versant des masses d'eau à leur stricte partie territoriale, par différenciation avec les couches "Masses d'eau côtières" et "Masses d'eau de transition".
 
 -	Une partie de ce script permet de synthétiser les variables de la couche tronçons de la BD Topage par entité de territoire :
     -	**longueur_ce_topage** : somme des linéaires de tronçons
