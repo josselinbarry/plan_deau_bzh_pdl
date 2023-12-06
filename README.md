@@ -15,7 +15,7 @@ En second lieu, étudier les liens de corrélation entre ces variables d’impla
     - Création et renseignement des attributs :
         - **ecoulement_naturel** (0/1) : "NatureSE" in (canal, écoulement canalisé, écoulement naturel) + corrections manuelles)
         - **zone_marais** (0/1) : attribution manuelle à partir des zones de marais du Scan25
-        - **marais_uhc1** (0/1) : intersection avec la couche UHC1 (XXX) et ("Persistanc" != 'permanent' and  "NatureSE" not in ( 'Plan d''eau - mare' ,  'Plan d''eau - retenue' ,  'Plan d''eau - réservoir', 'PE-réservoir-bassinorage', 'Ecoulement naturel' )) + corrections manuelles loire et vendée)
+        - **marais_uhc1** (0/1) : intersection avec la couche UHC1  et ("Persistanc" != 'permanent' and  "NatureSE" not in ( 'Plan d''eau - mare' ,  'Plan d''eau - retenue' ,  'Plan d''eau - réservoir', 'PE-réservoir-bassinorage', 'Ecoulement naturel' )) + corrections manuelles loire et vendée) (couche "UHC123internet" depuis le flux WFS du Forum des Marais de l'Atlantique (FMA) : http://wms.reseau-zones-humides.org/cgi-bin/wmsfma)
      
 - Import de la couche dans R, puis création et renseignement des attributs suivants :
     -	**bassin_orage** (0/1) : "NatureSE" = 'PE-réservoir-bassinorage'
@@ -36,8 +36,8 @@ En second lieu, étudier les liens de corrélation entre ces variables d’impla
     - **connecte_nappe** (0/1) : intersection du plan d'eau avec les zones d'alluvions et certaines de zones de colluvions de la BD CHARM (XXX)
     - **connecte_source** (0/1) : plan d'eau situé à 50m maximum d'une source
     - **connecte_rh** (0/1) : si la plan d'eau est connecté au linéaire hydrographique, à une source ou à la nappe
-    - **lithologie_simplifiée** : jointure de la couche XXX au centroïde du plan d'eau  
-    - **géologie** :  jointure de la BD CHARM
+    - **lithologie_simplifiée** : jointure spatiale de la couche "Carte lithologique simplifiée au 1/1 000 000" au centroïde du plan d'eau (couche issue du flux WMS du BRGM : http://geoservices.brgm.fr/geologie)
+    - **géologie** :  jointure spatiale de la géologie BD CHARM
     - **distance_roe** (m) : calcul de la distance aux ouvrages du ROE et affectation des principales valeurs attributaires des ouvrages situées à 20m maximum
     - **prelevements** : somme des volumes des prélèvements situés à 20m maximum du plan d'eau
     - **thermie** : A FAIRE
