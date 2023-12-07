@@ -357,7 +357,7 @@ display: none;
 <p>Ce projet vise à analyser la structure d’implantation des plans d’eau
 sur le territoire Bretagne Pays de la Loire.</p>
 <p>En second lieu, étudier les liens de corrélation entre ces variables
-d’implantation territoriales et des métriques de qualité.</p>
+d’implantation territoriales et certaines métriques de qualité.</p>
 <p><strong>1. Un premier script permet de constituer la couche
 plan-d’eau</strong> :</p>
 <ul>
@@ -447,7 +447,7 @@ de la BD CHARM</li>
 <li><strong>distance_roe</strong> (m) : calcul de la distance aux
 ouvrages du ROE et affectation des principales valeurs attributaires des
 ouvrages situées à 20m maximum</li>
-<li>**prel__2008_ret** à **prel__2019_ret** : somme des volumes des
+<li>**prel__2008_ret** à **prel__2019tot** : somme des volumes des
 prélèvements situés à 20m maximum du plan d’eau respectivement en
 retenue et totaux</li>
 <li><strong>pourcentage_captage_retenue</strong> : part des volumes
@@ -474,8 +474,8 @@ versant des masses d’eau à leur stricte partie territoriale, par
 différenciation avec les couches “Masses d’eau côtières” et “Masses
 d’eau de transition”.</p>
 <ul>
-<li>Une partie de ce script permet de synthétiser les variables de la
-couche tronçons de la BD Topage par entité de territoire :
+<li><p>Une partie de ce script permet de synthétiser les variables de la
+couche tronçons de la BD Topage par entité de territoire :</p>
 <ul>
 <li><strong>longueur_ce_topage</strong> : somme des linéaires de
 tronçons</li>
@@ -484,8 +484,8 @@ tronçons en tête de bassin versant.</li>
 <li><strong>strahler_max</strong> : rang de stahler maximum rencontré
 sur l’entité</li>
 </ul></li>
-<li>Une partie de ce script consiste à synthétiser les variables de la
-couche plan d’eau par entité de territoire :
+<li><p>Une partie de ce script consiste à synthétiser les variables de
+la couche plan d’eau par entité de territoire :</p>
 <ul>
 <li><strong>longueur_topage_intersecte_pe_tot</strong> : somme des
 linéaires de tronçons de la BD Topage interceptés par des PE.</li>
@@ -534,20 +534,51 @@ surfaces des PE sur cours permanents (hors marais)</li>
 des plans d’eau permanents</li>
 <li><strong>surface_moy_pe_perm_tdbv</strong> : calcul de la surface
 moyenne des plans d’eau permanents en TDBV</li>
+<li><strong>nb_mares_tot</strong> et <strong>surf_mares_tot</strong> :
+décompte et somme des surfaces des mares</li>
+<li><strong>nb_mareshm_tot</strong> et <strong>surf_mareshm_tot</strong>
+: décompte et somme des surfaces des mares (hors marais)</li>
+<li><strong>nb_mares_perm</strong> et <strong>surf_mares_perm</strong> :
+décompte et somme des surfaces des mares permanents</li>
+<li><strong>nb_mareshm_perm</strong> et
+<strong>surf_mareshm_perm</strong> : décompte et somme des surfaces des
+mares permanentes (hors marais)</li>
+<li>**prel__2008_ret** à **prel__2019_tot** : somme des volumes des
+prélèvements situés à 20m maximum d’un plan d’eau, respectivement en
+retenue et totaux</li>
 </ul></li>
-<li>Une partie de ce script permet de synthétiser les variables des
-couches de débit :
+<li><p>Une partie de ce script permet de synthétiser les variables des
+couches de débit :</p>
 <ul>
 <li><strong>QAMOY_max</strong> (L/s) : module maximal rencontré sur
 l’entité</li>
 <li><strong>Q5MOY_max</strong> (L/s) : qmna5 maximal rencontré sur
 l’entité</li>
 </ul></li>
-<li>Une partie de ce script vise à synthétiser les valeurs obtenues pour
-la couche communes, aux couches départements et région.</li>
+<li><p>Une partie de ce script vise à synthétiser les valeurs obtenues
+pour la couche communes, aux couches départements et région.</p>
+<ul>
+<li><p>Somme des longueurs, des surfaces, des volumes et des nombres
+d’objets.</p></li>
+<li><p>Valeurs maximales du rang de Strahler et des valeurs de
+débit.</p></li>
+</ul></li>
 </ul>
-<p>Somme des longueurs, des surfaces et des nombres d’objets. Valeurs
-maximales du rang de Strahler et des valeurs de débit.</p>
+<p><strong>3. Plusieurs scripts visent enfin à analyser les liens de
+corrélation entre implantation de plans d’eau et indicateurs de
+qualité</strong> :</p>
+<ul>
+<li><p><strong>Lien entre BV Masse d’eau et indicateurs de
+qualité</strong></p></li>
+<li><p><strong>Lien entre BV Masse d’eau et indicateurs de
+thermie</strong></p></li>
+<li><p><strong>Lien entre BV Masse d’eau et indicateurs
+IPR</strong></p></li>
+<li><p><strong>Lien entre BV Station piscicole et indicateurs
+IPR</strong></p></li>
+<li><p><strong>Lien entre BV Station Onde et indicateurs
+Onde</strong></p></li>
+</ul>
 </div>
 
 

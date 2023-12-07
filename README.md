@@ -2,7 +2,7 @@
 
 Ce projet vise à analyser la structure d’implantation des plans d’eau sur le territoire Bretagne Pays de la Loire.
 
-En second lieu, étudier les liens de corrélation entre ces variables d’implantation territoriales et des métriques de qualité.
+En second lieu, étudier les liens de corrélation entre ces variables d’implantation territoriales et certaines métriques de qualité.
 
 **1. Un premier script permet de constituer la couche plan-d’eau** :
 
@@ -102,3 +102,14 @@ Les couches de territoires retenues sont les suivantes :
     
     - Valeurs maximales du rang de Strahler et des valeurs de débit.
    
+**3. Plusieurs scripts visent enfin à analyser les liens de corrélation entre implantation de plans d'eau et indicateurs de qualité** :
+
+- **Lien entre BV Masse d'eau et indicateurs de qualité**
+
+- **Lien entre BV Masse d'eau et indicateurs de thermie**
+
+- **Lien entre BV Masse d'eau et indicateurs IPR**
+
+- **Lien entre BV Station piscicole et indicateurs IPR**
+
+- **Lien entre BV Station Onde et indicateurs Onde**

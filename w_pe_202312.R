@@ -30,16 +30,13 @@ pe <-
 
 interstect_test <- sf::read_sf(dsn = "data/testA.gpkg")
 
-sages <- sf::read_sf(dsn = "data/sages_zone_etude.gpkg") %>%
+sages <- sf::read_sf(dsn = "data/outputs/sages_20231202.gpkg") %>%
   st_transform(crs = 2154) %>%
-  mutate(surface_sage = st_area(geom)) %>%
-  select(NOM, surface_sage) %>%
-  rename(nom_sage = NOM)
+  mutate(hors_prelevement = hors_prelevements) 
 
-bv_me_decoup <- sf::read_sf(dsn = "data/bv_me_decoup_20231128.gpkg") %>%
+bv_me_decoup <- sf::read_sf(dsn = "data/outputs/bv_me_decoup_20231202.gpkg") %>%
   st_transform(crs = 2154) %>%
-  mutate(surface_me = st_area(geom)) %>%
-  select(cdeumassed, nombvspemd, surface_me)
+  mutate(surface_me = st_area(geom)) 
   
 communes <- sf::read_sf(dsn = "data/communes_zone_etude.gpkg") %>%
   st_transform(crs = 2154) %>%
@@ -85,6 +82,14 @@ qa <- sf::read_sf(dsn = "data/qa_zone_etude.gpkg") %>%
 q5 <- sf::read_sf(dsn = "data/q5_zone_etude.gpkg") %>%
   select(ID_BDCARTH, Q5BASN, Q5MOY_MN, Q5HAUN) %>%
   mutate(ID_BDCARTH = as.character(ID_BDCARTH)) %>%
+  st_transform(crs = 2154)
+
+departements <- sf::read_sf(dsn = "data/departements.gpkg") %>%
+  select(insee_dep, nom_departement) %>%
+  st_transform(crs = 2154)
+
+regions <- sf::read_sf(dsn = "data/regions.gpkg") %>%
+  select(insee_reg, nom_region) %>%
   st_transform(crs = 2154)
 
 ## Calcul des linéaires topages et strahler max par me ----
@@ -1932,10 +1937,55 @@ communes <- communes %>%
 
 sf::write_sf(obj = communes, dsn = "data/outputs/communes_20231202.gpkg")
 
-# INUTILE : Création de l'indicateur "vulnerabilite_captage" ----
+# Suppression des valeurs de prélevements des territoires partiellement hors DR ----
 
 bv_me_decoup <- bv_me_decoup %>%
-  mutate(pourcentage_captage_retenue_2013 = prel_2013_ret*100/prel_2013_tot)
+  mutate(prel_2008_ret = ifelse(hors_prelevement == 0, prel_2008_ret, NA),
+         prel_2009_ret = ifelse(hors_prelevement == 0, prel_2009_ret, NA),
+         prel_2010_ret = ifelse(hors_prelevement == 0, prel_2010_ret, NA),
+         prel_2011_ret = ifelse(hors_prelevement == 0, prel_2011_ret, NA),
+         prel_2012_ret = ifelse(hors_prelevement == 0, prel_2012_ret, NA),
+         prel_2013_ret = ifelse(hors_prelevement == 0, prel_2013_ret, NA),
+         prel_2014_ret = ifelse(hors_prelevement == 0, prel_2014_ret, NA),
+         prel_2015_ret = ifelse(hors_prelevement == 0, prel_2015_ret, NA),
+         prel_2016_ret = ifelse(hors_prelevement == 0, prel_2016_ret, NA),
+         prel_2019_ret = ifelse(hors_prelevement == 0, prel_2019_ret, NA),
+         prel_2008_tot = ifelse(hors_prelevement == 0, prel_2008_tot, NA),
+         prel_2009_tot = ifelse(hors_prelevement == 0, prel_2009_tot, NA),
+         prel_2010_tot = ifelse(hors_prelevement == 0, prel_2010_tot, NA),
+         prel_2011_tot = ifelse(hors_prelevement == 0, prel_2011_tot, NA),
+         prel_2012_tot = ifelse(hors_prelevement == 0, prel_2012_tot, NA),
+         prel_2013_tot = ifelse(hors_prelevement == 0, prel_2013_tot, NA),
+         prel_2014_tot = ifelse(hors_prelevement == 0, prel_2014_tot, NA),
+         prel_2015_tot = ifelse(hors_prelevement == 0, prel_2015_tot, NA),
+         prel_2016_tot = ifelse(hors_prelevement == 0, prel_2016_tot, NA),
+         prel_2019_tot = ifelse(hors_prelevement == 0, prel_2019_tot, NA))
+
+sf::write_sf(obj = bv_me_decoup, dsn = "data/outputs/bv_me_decoup_20231202.gpkg")
+
+sages <- sages %>%
+  mutate(prel_2008_ret = ifelse(hors_prelevement == 0, prel_2008_ret, NA),
+         prel_2009_ret = ifelse(hors_prelevement == 0, prel_2009_ret, NA),
+         prel_2010_ret = ifelse(hors_prelevement == 0, prel_2010_ret, NA),
+         prel_2011_ret = ifelse(hors_prelevement == 0, prel_2011_ret, NA),
+         prel_2012_ret = ifelse(hors_prelevement == 0, prel_2012_ret, NA),
+         prel_2013_ret = ifelse(hors_prelevement == 0, prel_2013_ret, NA),
+         prel_2014_ret = ifelse(hors_prelevement == 0, prel_2014_ret, NA),
+         prel_2015_ret = ifelse(hors_prelevement == 0, prel_2015_ret, NA),
+         prel_2016_ret = ifelse(hors_prelevement == 0, prel_2016_ret, NA),
+         prel_2019_ret = ifelse(hors_prelevement == 0, prel_2019_ret, NA),
+         prel_2008_tot = ifelse(hors_prelevement == 0, prel_2008_tot, NA),
+         prel_2009_tot = ifelse(hors_prelevement == 0, prel_2009_tot, NA),
+         prel_2010_tot = ifelse(hors_prelevement == 0, prel_2010_tot, NA),
+         prel_2011_tot = ifelse(hors_prelevement == 0, prel_2011_tot, NA),
+         prel_2012_tot = ifelse(hors_prelevement == 0, prel_2012_tot, NA),
+         prel_2013_tot = ifelse(hors_prelevement == 0, prel_2013_tot, NA),
+         prel_2014_tot = ifelse(hors_prelevement == 0, prel_2014_tot, NA),
+         prel_2015_tot = ifelse(hors_prelevement == 0, prel_2015_tot, NA),
+         prel_2016_tot = ifelse(hors_prelevement == 0, prel_2016_tot, NA),
+         prel_2019_tot = ifelse(hors_prelevement == 0, prel_2019_tot, NA))
+
+sf::write_sf(obj = sages, dsn = "data/outputs/sages_20231202.gpkg")
 
 # Synthèse des résultats de la couche communes aux couches départements et régions ----
 
@@ -1993,7 +2043,13 @@ dprt <- communes %>%
     prel_2015_tot = sum(prel_2015_tot, na.rm = TRUE),
     prel_2016_tot = sum(prel_2016_tot, na.rm = TRUE),
     prel_2019_tot = sum(prel_2019_tot, na.rm = TRUE)) %>%
-  filter(insee_dep %in% c(22, 29, 35, 44, 49, 53, 56, 72, 85))
+  filter(insee_dep %in% c(22, 29, 35, 44, 49, 53, 56, 72, 85))%>%
+  st_drop_geometry()
+
+departements <- departements %>%
+  left_join(dprt, by = c("insee_dep" = "insee_dep"))
+
+sf::write_sf(obj = departements, dsn = "data/outputs/departements_20231202.gpkg")
 
 region <- communes %>%
   group_by(insee_reg) %>%
@@ -2029,6 +2085,14 @@ region <- communes %>%
     surf_pehm_sur_cours_perm = sum(surf_pehm_sur_cours_perm, na.rm = TRUE),
     QAMOY_max = max(QAMOY_max, na.rm = TRUE),
     Q5MOY_max = max(Q5MOY_max, na.rm = TRUE),
+    nb_mares_tot = sum(nb_mares_tot, na.rm = TRUE),
+    surf_mares_tot = sum(surf_mares_tot, na.rm = TRUE),
+    nb_mareshm_tot = sum(nb_mareshm_tot, na.rm = TRUE),
+    surf_mareshm_tot= sum(surf_mareshm_tot, na.rm = TRUE),
+    nb_mares_perm = sum(nb_mares_perm, na.rm = TRUE),
+    surf_mares_perm = sum(surf_mares_perm, na.rm = TRUE),
+    nb_mareshm_perm = sum(nb_mareshm_perm, na.rm = TRUE),
+    surf_mareshm_perm = sum(surf_mareshm_perm, na.rm = TRUE),
     prel_2008_ret = sum(prel_2008_ret, na.rm = TRUE),
     prel_2009_ret = sum(prel_2009_ret, na.rm = TRUE),
     prel_2010_ret = sum(prel_2010_ret, na.rm = TRUE),
@@ -2049,7 +2113,13 @@ region <- communes %>%
     prel_2015_tot = sum(prel_2015_tot, na.rm = TRUE),
     prel_2016_tot = sum(prel_2016_tot, na.rm = TRUE),
     prel_2019_tot = sum(prel_2019_tot, na.rm = TRUE)) %>%
-  filter(insee_reg %in% c(52, 53))
+  filter(insee_reg %in% c(52, 53)) %>%
+  st_drop_geometry()
+
+regions <- regions %>%
+  left_join(region, by = c("insee_reg" = "insee_reg"))
+
+sf::write_sf(obj = regions, dsn = "data/outputs/regions_20231202.gpkg")
 
 # Sauvegarde des résultats
 
@@ -2085,8 +2155,8 @@ save(lineaire_topage_pe_me,
      sages, 
      communes,
      bv_ipr,
-     dprt, 
-     region,
+     departements, 
+     regions,
      file = "data/outputs/w_territoires2.RData")
 
 # chargement des résultats
@@ -2137,4 +2207,4 @@ bv_ipr <- bv_ipr %>%
 communes <- communes %>%
   select(-starts_with("nb_"), -starts_with("surf_"), -starts_with("longueur_"), -starts_with("surface_moy"))
 
-
+rm(dprt)
