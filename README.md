@@ -43,8 +43,6 @@ En second lieu, étudier les liens de corrélation entre ces variables d’impla
     - **géologie** :  jointure spatiale de la géologie issue de la BD CHARM
     - **distance_roe** (m) : calcul de la distance aux ouvrages du ROE et affectation des principales valeurs attributaires des ouvrages situées à 20m maximum
     - **prel__2008_ret** à **prel__2019tot** : somme des volumes des prélèvements situés à 20m maximum du plan d'eau respectivement en retenue et totaux
-    - **pourcentage_captage_retenue** : part des volumes captés en retenue sur le total des captages
-    - **thermie** : A FAIRE
 
 **2. Un second script permet de constituer les couches de territoire (bassin versant des masses d’eau, SAGE, communes, bassin versant amont des stations de prélèvement IPR)** :
 
