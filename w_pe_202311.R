@@ -629,16 +629,93 @@ pe_prelev_unique <- pe_prelev %>%
 pe <- pe %>% 
   left_join(y = pe_prelev_unique)
 
-# Jointure des prélèvements 2019 en retenue - BUG ---- 
+# Jointure des prélèvements 2019 en retenue ---- 
 
 plus_proche_pe_2019 <- sf::st_nearest_feature(x = prelevements_2019 %>%
-                                                filter(mal_georeference == 0),
+                                                filter(mal_georeference == 0 &
+                                                         sur_retenue == 1),
                                          y = pe)
 
 distance_prelevement_2019 <- st_distance(prelevements_2019 %>%
-                                           filter(mal_georeference == 0),
+                                           filter(mal_georeference == 0 &
+                                                    sur_retenue == 1),
                                     pe[plus_proche_pe_2019,],
                                     by_element = TRUE)
+
+pe_prelev_2019 <- prelevements_2019 %>% 
+  filter(mal_georeference == 0 &
+           sur_retenue == 1) %>%
+  cbind(distance_prelevement_2019) %>% 
+  cbind(pe[plus_proche_pe_2019,]) %>% 
+  st_drop_geometry() %>% 
+  mutate(distance_prelevement_2019 = round(distance_prelevement_2019)) %>%
+  units::drop_units()
+
+pe_prelev_2019_unique <- pe_prelev_2019 %>%
+  filter(distance_prelevement_2019 <= 20) %>%
+  group_by(cdoh_plando) %>%
+  summarise(prel_2019_ret = sum(VOLUME))%>%
+  select(cdoh_plando, prel_2019_ret) %>%
+  sf::st_drop_geometry() %>%
+  units::drop_units()
+
+pe <- pe %>% 
+  left_join(y = pe_prelev_2019_unique)
+
+# INUTILE ? : Jointure des prélèvements totaux ----
+
+plus_proche_pe_tot <- sf::st_nearest_feature(x = prelevement_totaux,
+                                         y = pe)
+
+distance_prelevement_tot <- st_distance(prelevements,
+                                    pe[plus_proche_pe_tot,],
+                                    by_element = TRUE)
+
+pe_prelev_tot <- prelevements_totaux %>% 
+  cbind(distance_prelevement_tot) %>% 
+  cbind(pe[plus_proche_pe_tot,]) %>% 
+  st_drop_geometry() %>% 
+  mutate(distance_prelevement_tot = round(distance_prelevement_tot)) %>%
+  units::drop_units()
+
+pe_prelev_tot_unique <- pe_prelev %>%
+  filter(distance_prelevement_tot <= 20) %>%
+  group_by(cdoh_plando) %>%
+  summarise(prel_2008_tot = sum(X2008_1),
+            prel_2009_tot = sum(X2009_1),
+            prel_2010_tot = sum(X2010_1),
+            prel_2011_tot = sum(X2011_1),
+            prel_2012_tot = sum(X2012_1),
+            prel_2013_tot = sum(X2013_1),
+            prel_2014_tot = sum(X2014_1),
+            prel_2015_tot = sum(X2015_1),
+            prel_2016_tot = sum(X2016_1))%>%
+  select(cdoh_plando,
+         prel_2008_ret, 
+         prel_2009_ret,
+         prel_2010_ret,
+         prel_2011_ret,
+         prel_2012_ret,
+         prel_2013_ret,
+         prel_2014_ret,
+         prel_2015_ret,
+         prel_2016_ret) %>%
+  sf::st_drop_geometry() %>%
+  units::drop_units()
+
+pe <- pe %>% 
+  left_join(y = pe_prelev_tot_unique)
+
+# INUTILE ? : Jointure des prélèvements 2019 (à revoir) ---- 
+
+plus_proche_pe_2019 <- sf::st_nearest_feature(x = prelevements_2019 %>%
+                                                filter(mal_georeference == 0),
+                                              y = pe)
+
+distance_prelevement_2019 <- st_distance(prelevements_2019 %>%
+                                           filter(mal_georeference == 0),
+                                         pe[plus_proche_pe_2019,],
+                                         by_element = TRUE)
 
 pe_prelev_2019 <- prelevements_2019 %>% 
   filter(mal_georeference == 0) %>%
@@ -836,5 +913,5 @@ pe <- pe %>%
               select(identifiant_roe, statut_nom, type_nom, fpi_nom1, usage_nom1, hauteur_chute_etiage),
             join_by('identifiant_roe' == 'identifiant_roe'))
 
-sf::write_sf(obj = pe, dsn = "data/outputs/pe_qualifies_20231201.gpkg")
+sf::write_sf(obj = pe, dsn = "data/outputs/pe_qualifies_20231202.gpkg")
 

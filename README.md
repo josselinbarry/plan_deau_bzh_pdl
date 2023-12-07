@@ -42,7 +42,7 @@ En second lieu, étudier les liens de corrélation entre ces variables d’impla
     - **lithologie** : jointure spatiale de la couche "Carte lithologique simplifiée au 1/1 000 000" au centroïde du plan d'eau (couche issue du flux WMS du BRGM : http://geoservices.brgm.fr/geologie)
     - **géologie** :  jointure spatiale de la géologie issue de la BD CHARM
     - **distance_roe** (m) : calcul de la distance aux ouvrages du ROE et affectation des principales valeurs attributaires des ouvrages situées à 20m maximum
-    - **prel__2008_ret** à **prel__2019_ret** : somme des volumes des prélèvements situés à 20m maximum du plan d'eau respectivement en retenue et totaux
+    - **prel__2008_ret** à **prel__2019tot** : somme des volumes des prélèvements situés à 20m maximum du plan d'eau respectivement en retenue et totaux
     - **pourcentage_captage_retenue** : part des volumes captés en retenue sur le total des captages
     - **thermie** : A FAIRE
 
@@ -86,13 +86,19 @@ Les couches de territoires retenues sont les suivantes :
     -	**nb_pehm_sur_cours_perm** et **surf_pehm_sur_cours_perm** : décompte et somme des surfaces des PE sur cours permanents (hors marais)
     -	**surface_moy_pe_perm** : calcul de la surface moyenne des plans d’eau permanents
     -	**surface_moy_pe_perm_tdbv** : calcul de la surface moyenne des plans d’eau permanents en TDBV
-
+    -	**nb_mares_tot** et **surf_mares_tot** : décompte et somme des surfaces des mares
+    -	**nb_mareshm_tot** et **surf_mareshm_tot** : décompte et somme des surfaces des mares (hors marais)
+    -	**nb_mares_perm** et **surf_mares_perm** : décompte et somme des surfaces des mares permanents
+    -	**nb_mareshm_perm** et **surf_mareshm_perm** : décompte et somme des surfaces des mares permanentes (hors marais)
+    - **prel__2008_ret** à **prel__2019_tot** : somme des volumes des prélèvements situés à 20m maximum d'un plan d'eau, respectivement en retenue et totaux
+    
 - Une partie de ce script permet de synthétiser les variables des couches de débit :
     -	**QAMOY_max** (L/s) : module maximal rencontré sur l'entité
     -	**Q5MOY_max** (L/s) : qmna5 maximal rencontré sur l'entité
     
 - Une partie de ce script vise à synthétiser les valeurs obtenues pour la couche communes, aux couches départements et région.
 
-Somme des longueurs, des surfaces et des nombres d'objets.
-Valeurs maximales du rang de Strahler et des valeurs de débit.
+    - Somme des longueurs, des surfaces, des volumes et des nombres d'objets.
+    
+    - Valeurs maximales du rang de Strahler et des valeurs de débit.
    
