@@ -76,18 +76,29 @@ Les couches de territoires retenues sont les suivantes :
     -	**nb_pehm_tot** et **surf_pehm_tot** : décompte et somme des surfaces des PE (hors marais)
     -	**nb_pe_perm** et **surf_pe_perm** : décompte et somme des surfaces des PE permanents
     -	**nb_pehm_perm** et **surf_pehm_perm** : décompte et somme des surfaces des PE permanents (hors marais)
+    -	**nb_pe_zhp_tot** et **surf_pe_zhp_tot** : décompte et somme des surfaces des PE en zone humide probable 
+    -	**nb_pehm_zhp_tot** et **surf_pehm_zhp_tot** : décompte et somme des surfaces des PE en zone humide probable (hors marais)
+    -	**nb_pe_perm** et **surf_pe_perm** : décompte et somme des surfaces des PE permanents
+    -	**nb_pe_zhp_perm** et **surf_pe_zhp_perm** : décompte et somme des surfaces des PE permanents
+    -	**nb_pehm_perm** et **surf_pehm_perm** : décompte et somme des surfaces des PE permanents (hors marais)
     -	**nb_pehm_tdbv_tot** et **surf_pehm_tdbv_tot** : décompte et somme des surfaces des PE en TDBV (hors marais)
     -	**nb_pehm_tdbv_perm** et **surf_pehm_tdbv_perm** : décompte et somme des surfaces des PE en TDBV permanents (hors marais)
     -	**nb_pehm_connecte_tot** et **surf_pehm_connecte_tot** : décompte et somme des surfaces des PE connectés (hors marais)
     -	**nb_pehm_connecte_perm** et **surf_pehm_connecte_perm** : décompte et somme des surfaces des PE connectés permanents (hors marais)
     -	**nb_pehm_sur_cours_tot** et **surf_pehm_sur_cours_tot** : décompte et somme des surfaces des PE sur cours (hors marais)
     -	**nb_pehm_sur_cours_perm** et **surf_pehm_sur_cours_perm** : décompte et somme des surfaces des PE sur cours permanents (hors marais)
+    -	**nb_pehm_zhp_tot** et **surf_pehm_zhp_tot** : décompte et somme des surfaces des PE en zone humide probable (hors marais)
+    -	**nb_pehm_zhp_perm** et **surf_pehm_zhp_perm** : décompte et somme des surfaces des PE en zone humide probable (hors marais)
     -	**surface_moy_pe_perm** : calcul de la surface moyenne des plans d’eau permanents
     -	**surface_moy_pe_perm_tdbv** : calcul de la surface moyenne des plans d’eau permanents en TDBV
     -	**nb_mares_tot** et **surf_mares_tot** : décompte et somme des surfaces des mares
-    -	**nb_mareshm_tot** et **surf_mareshm_tot** : décompte et somme des surfaces des mares (hors marais)
     -	**nb_mares_perm** et **surf_mares_perm** : décompte et somme des surfaces des mares permanents
+    -	**nb_mares_zhp_tot** et **surf_mares_zhp_tot** : décompte et somme des surfaces des mares
+    -	**nb_mares_zhp_perm** et **surf_mares_zhp_perm** : décompte et somme des surfaces des mares permanents
+    -	**nb_mareshm_tot** et **surf_mareshm_tot** : décompte et somme des surfaces des mares (hors marais)
     -	**nb_mareshm_perm** et **surf_mareshm_perm** : décompte et somme des surfaces des mares permanentes (hors marais)
+    -	**nb_mareshm_zhp_tot** et **surf_mareshm_zhp_tot** : décompte et somme des surfaces des mares (hors marais)
+    -	**nb_mareshm_zhp_perm** et **surf_mareshm_zhp_perm** : décompte et somme des surfaces des mares permanentes (hors marais)
     - **prel__2008_ret** à **prel__2019_tot** : somme des volumes des prélèvements situés à 20m maximum d'un plan d'eau, respectivement en retenue et totaux
     
 - Une partie de ce script permet de synthétiser les variables des couches de débit :

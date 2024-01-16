@@ -452,6 +452,37 @@ bv_ipr <- bv_ipr %>%
 
 sf::write_sf(obj = bv_ipr, dsn = "data/outputs/bv_ipr_20231201.gpkg")
 
+# Calcul des surfaces cumulées de ZHP ----
+
+## Calcul des surfaces cumulées de ZHP par BV ME ----
+
+zhp_tot <-
+  dplyr::bind_rows(
+    zhp53, zhp52, zhp28, zhp75)
+
+zhp_decoup_me <- zhp_tot %>% 
+  st_intersection(bv_me_decoup) %>% # découpage des plando selon les masses d'eau
+  mutate(surface_intersect = st_area(.)) %>% # superficie des intersects
+  st_drop_geometry()
+
+sf::write_sf(obj = zhp_decoup_me, dsn = "data/outputs/zhp53_decoup_me_20231200.gpkg")
+
+surf_zhp_me <-
+  compter_sommer_surfaces_dans_polygone(
+    couche_surface = zhp_decoup_me %>% 
+      units::drop_units(),
+    var_id_polygone = cdeumassed,
+    var_a_sommer = surface_intersect,
+    var_nb_objets = nb_zhp,
+    var_somme_surfaces = surf_zhp,
+    zone_marais_incluse = FALSE,
+    seulement_permanent = FALSE, 
+    seulement_tdbv = FALSE,
+    seulement_connecte = FALSE, 
+    seulement_sur_cours = FALSE
+  ) %>%
+  select(-nb_zhp)
+
 # Décompte et calcul des surfaces cumulées de PE et de mares ----
 
 ## Décompte et calcul des surfaces cumulées de PE par BV ME ----
