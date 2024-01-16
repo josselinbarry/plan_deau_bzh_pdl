@@ -34,7 +34,7 @@ sages <- sf::read_sf(dsn = "data/outputs/sages_20231202.gpkg") %>%
   st_transform(crs = 2154) %>%
   mutate(hors_prelevement = hors_prelevements) 
 
-bv_me_decoup <- sf::read_sf(dsn = "data/outputs/bv_me_decoup_20231202.gpkg") %>%
+bv_me_decoup <- sf::read_sf(dsn = "data/outputs/bv_me_decoup_20240110.gpkg") %>%
   st_transform(crs = 2154) %>%
   mutate(surface_me = st_area(geom)) 
   
@@ -92,7 +92,19 @@ regions <- sf::read_sf(dsn = "data/regions.gpkg") %>%
   select(insee_reg, nom_region) %>%
   st_transform(crs = 2154)
 
-zh_probables <- sf::read_sf(dsn = "data/zh_probables.gpkg") %>%
+zhp24 <- sf::read_sf(dsn = "data/zhp_24_vect.shp") %>%
+  st_transform(crs = 2154)
+
+zhp28 <- sf::read_sf(dsn = "data/zhp_28_vect.shp") %>%
+  st_transform(crs = 2154)
+
+zhp52 <- sf::read_sf(dsn = "data/zhp_52_vect.shp") %>%
+  st_transform(crs = 2154)
+
+zhp53 <- sf::read_sf(dsn = "data/zhp_53_vect.shp") %>%
+  st_transform(crs = 2154)
+
+zhp75 <- sf::read_sf(dsn = "data/zhp_75_vect.shp") %>%
   st_transform(crs = 2154)
 
 # Calcul des linéaires topages et strahler max ----
@@ -458,14 +470,14 @@ sf::write_sf(obj = bv_ipr, dsn = "data/outputs/bv_ipr_20231201.gpkg")
 
 zhp_tot <-
   dplyr::bind_rows(
-    zhp53, zhp52, zhp28, zhp75)
+    zhp24, zhp28, zhp53, zhp52, zhp75)
 
 zhp_decoup_me <- zhp_tot %>% 
   st_intersection(bv_me_decoup) %>% # découpage des plando selon les masses d'eau
   mutate(surface_intersect = st_area(.)) %>% # superficie des intersects
   st_drop_geometry()
 
-sf::write_sf(obj = zhp_decoup_me, dsn = "data/outputs/zhp53_decoup_me_20231200.gpkg")
+sf::write_sf(obj = zhp_decoup_me, dsn = "data/outputs/zhp_decoup_me_20240110.gpkg")
 
 surf_zhp_me <-
   compter_sommer_surfaces_dans_polygone(
@@ -482,6 +494,44 @@ surf_zhp_me <-
     seulement_sur_cours = FALSE
   ) %>%
   select(-nb_zhp)
+
+bv_me_decoup <- bv_me_decoup %>%
+  dplyr::left_join(surf_zhp_me) %>%
+  units::drop_units()
+
+sf::write_sf(obj = bv_me_decoup, dsn = "data/outputs/bv_me_decoup_20240115.gpkg")
+
+## Calcul des surfaces cumulées de ZHP par commune ----
+
+zhp_decoup_com <- zhp_tot %>% 
+  st_intersection(communes) %>% # découpage des plando selon les masses d'eau
+  mutate(surface_intersect = st_area(.)) %>% # superficie des intersects
+  st_drop_geometry()
+
+sf::write_sf(obj = zhp_decoup_com, dsn = "data/outputs/zhp_decoup_com_20240110.gpkg")
+
+surf_zhp_com <-
+  compter_sommer_surfaces_dans_polygone(
+    couche_surface = zhp_decoup_com %>% 
+      units::drop_units(),
+    var_id_polygone = code_insee,
+    var_a_sommer = surface_intersect,
+    var_nb_objets = nb_zhp,
+    var_somme_surfaces = surf_zhp,
+    zone_marais_incluse = FALSE,
+    seulement_permanent = FALSE, 
+    seulement_tdbv = FALSE,
+    seulement_connecte = FALSE, 
+    seulement_sur_cours = FALSE
+  ) %>%
+  select(-nb_zhp)
+
+communes <- communes %>%
+  dplyr::left_join(surf_zhp_me) %>%
+  units::drop_units()
+
+sf::write_sf(obj = bv_me_decoup, dsn = "data/outputs/communes_20240115.gpkg")
+
 
 # Décompte et calcul des surfaces cumulées de PE et de mares ----
 
@@ -2859,10 +2909,15 @@ save(lineaire_topage_pe_me,
      regions,
      file = "data/outputs/w_territoires2.RData")
 
+save(zhp_tot,
+     zhp_decoup_me,
+  file = "data/outputs/w_territoires3.RData")
+
 # chargement des résultats
 
 load(file = "data/outputs/w_territoires.RData")
 load(file = "data/outputs/w_territoires2.RData")
+load(file = "data/outputs/w_territoires3.RData")
 load(file = "data/outputs/w_plando1.RData")
 load(file = "data/outputs/w_plando2.RData")
 
