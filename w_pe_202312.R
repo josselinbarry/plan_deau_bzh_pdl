@@ -2951,6 +2951,9 @@ save(lineaire_topage_pe_me,
 
 save(zhp_tot,
      zhp_decoup_me,
+     zhp_decoup_sage,
+     zhp_decoup_ipr,
+     zhp_decoup_com,
   file = "data/outputs/w_territoires3.RData")
 
 # chargement des résultats
