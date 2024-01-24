@@ -14,7 +14,6 @@ library(mapview)
 library(readxl)
 library(downloadthis)
 library(FactoMineR)
-library
 
 ## Chargement des données ----
 
@@ -105,7 +104,9 @@ bv_me_indicateur_ipr_tot <- bv_me_indicateur_tot %>%
 ##=> correlation type pearson
 
 bv_me_indicateur_ipr_tot_logs <- bv_me_indicateur_ipr_tot %>% 
-  mutate(across(surface_me:densite_pehm_mareshm_zhp_zhp, log)) %>%
+  mutate(across(surface_me:densite_pehm_connecte, log)) %>%
+  mutate(densite_pehm_sur_cours, function(x) log(1+x)) %>%
+  mutate(across(densite_pehm_zhp:densite_pehm_mareshm_zhp_zhp, log)) %>%
   mutate(across(prct_intercept:prct_intercept_tdbv, function(x) log(1+x))) %>%
   mutate(across(prct_surf_pe:prct_surf_pehm_mareshm_zhp_zhp, log))
 
