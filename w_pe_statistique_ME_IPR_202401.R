@@ -14,6 +14,7 @@ library(mapview)
 library(readxl)
 library(downloadthis)
 library(FactoMineR)
+library
 
 ## Chargement des données ----
 
@@ -121,7 +122,7 @@ corrplot::corrplot(corr_tot, order="hclust",tl.srt=45, addrect = 13)
 # on écarte du groupe de variable celle qui ne sont pas de même nature interprétative (densité et prct par expl) 
 # on ajoute les identifiants des lignes en rownames
 
-prct_tot3 <- bv_me_indicateur_ipr_tot_logs %>% 
+prct_tot <- bv_me_indicateur_ipr_tot_logs %>% 
   select(cdeumassed,
          prct_surf_pe,
          prct_surf_pe_mares,
@@ -133,11 +134,11 @@ prct_tot3 <- bv_me_indicateur_ipr_tot_logs %>%
 #         prct_surf_pehm_mareshm_zhp_zhp) %>% 
   column_to_rownames(var = "cdeumassed")
 
-acp_prct_tot3 <- PCA(prct_tot3, scale.unit = TRUE, ncp = 5, graph = T)
+acp_prct_tot <- PCA(prct_tot, scale.unit = TRUE, ncp = 5, graph = T)
 
 names(acp_prct)
 
-prct_synth <- acp_prct_tot3$ind$coord %>%
+df_prct_synth <- acp_prct_tot$ind$coord %>%
   as.data.frame() %>% 
   select(prct_synth = Dim.1) %>% 
   rownames_to_column(var = "cdeumassed")
@@ -157,7 +158,7 @@ densite_tot <- bv_me_indicateur_ipr_tot_logs %>%
 
 acp_densite_tot <- PCA(densite_tot, scale.unit = TRUE, ncp = 5, graph = T)
 
-densite_synth <- acp_densite_tot$ind$coord %>%
+df_densite_synth <- acp_densite_tot$ind$coord %>%
   as.data.frame() %>% 
   select(densite_synth = Dim.1) %>% 
   rownames_to_column(var = "cdeumassed")
@@ -173,7 +174,7 @@ intercept_tot <- bv_me_indicateur_ipr_tot_logs %>%
 
 acp_intercept_tot <- PCA(intercept_tot, scale.unit = TRUE, ncp = 4, graph = T)
 
-intercept_synth <- acp_intercept_tot$ind$coord %>%
+df_intercept_synth <- acp_intercept_tot$ind$coord %>%
   as.data.frame() %>% 
   select(intercept_synth = Dim.1) %>% 
   rownames_to_column(var = "cdeumassed")
@@ -188,9 +189,9 @@ densite_zhp_zhp_tot <- bv_me_indicateur_ipr_tot_logs %>%
 
 acp_densite_zhp_zhp_tot <- PCA(densite_zhp_zhp_tot, scale.unit = TRUE, ncp = 4, graph = T)
 
-densite_zhp_zhp_synth <- acp_densite_zhp_zhp_tot$ind$coord %>%
+df_densite_zhp_zhp_synth <- acp_densite_zhp_zhp_tot$ind$coord %>%
   as.data.frame() %>% 
-  select(densite_zhp_zhp = Dim.1) %>% 
+  select(densite_zhp_zhp_synth = Dim.1) %>% 
   rownames_to_column(var = "cdeumassed")
 
 ### ACP sur les prct_surf_zhp_zhp ----
@@ -203,9 +204,9 @@ prct_surf_zhp_zhp_tot <- bv_me_indicateur_ipr_tot_logs %>%
 
 acp_prct_surf_zhp_zhp_tot <- PCA(prct_surf_zhp_zhp_tot, scale.unit = TRUE, ncp = 4, graph = T)
 
-prct_surf_zhp_zhp_synth <- acp_prct_surf_zhp_zhp_tot$ind$coord %>%
+df_prct_surf_zhp_zhp_synth <- acp_prct_surf_zhp_zhp_tot$ind$coord %>%
   as.data.frame() %>% 
-  select(prct_surf_zhp_zhp = Dim.1) %>% 
+  select(prct_surf_zhp_zhp_synth = Dim.1) %>% 
   rownames_to_column(var = "cdeumassed")
 
 ## Assemblage du tableau pour la modélisation ----
@@ -218,11 +219,17 @@ data <- bv_me_indicateur_ipr_tot_logs %>%
          densite_pehm_connecte,
          prct_surf_pehm_tdbv,
          ipr_etat) %>% 
-  left_join(y = prct_synth) %>% 
-  left_join(y = densite_synth) %>%
-  left_join(y = intercept_synth) %>%
-  left_join(y = densite_zhp_zhp_synth) %>%
-  left_join(y = prct_surf_zhp_zhp_synth) 
+  left_join(y = df_prct_synth) %>% 
+  left_join(y = df_densite_synth) %>%
+  left_join(y = df_intercept_synth) %>%
+  left_join(y = df_densite_zhp_zhp_synth) %>%
+  left_join(y = df_prct_surf_zhp_zhp_synth) 
+
+save(data, file = "data/outputs/w_pe_stat_1.RData")
+
+load(file = "data/outputs/w_pe_stat_1.RData")
+
+rm(prct_surf_zhp_zhp_synth)
 
 ## Test de correlation ----
 
