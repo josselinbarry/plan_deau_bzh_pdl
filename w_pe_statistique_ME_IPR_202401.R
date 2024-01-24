@@ -212,7 +212,7 @@ df_prct_surf_zhp_zhp_synth <- acp_prct_surf_zhp_zhp_tot$ind$coord %>%
 
 ## Assemblage du tableau pour la modélisation ----
 
-data <- bv_me_indicateur_ipr_tot_logs %>% 
+stat_corr_me_ipr <- bv_me_indicateur_ipr_tot_logs %>% 
   select(cdeumassed,
          surface_me,
          surface_moy_pe_perm,
@@ -226,27 +226,5 @@ data <- bv_me_indicateur_ipr_tot_logs %>%
   left_join(y = df_densite_zhp_zhp_synth) %>%
   left_join(y = df_prct_surf_zhp_zhp_synth) 
 
-save(data, file = "data_processed/w_pe_stat_1.RData")
+save(stat_corr_me_ipr, file = "data_processed/w_pe_stat_1.RData")
 
-load(file = "data/outputs/w_pe_stat_1.RData")
-
-rm(prct_surf_zhp_zhp_synth)
-
-## Test de correlation ----
-
-correlations_toutes_variables_synth <- 
-chart.Correlation(data %>% 
-                    select(surface_me,
-                           surface_me,
-                           surface_moy_pe_perm,
-                           densite_pehm_sur_cours,
-                           densite_pehm_connecte,
-                           prct_surf_pehm_tdbv,
-                           prct_synth, 
-                           densite_synth,
-                           intercept_synth,
-                           densite_zhp_zhp_synth,
-                           prct_surf_zhp_zhp_synth,
-                           ipr_etat),
-                  histogram = TRUE,
-                  pch = 19)
