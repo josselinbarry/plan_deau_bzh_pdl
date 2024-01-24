@@ -105,7 +105,7 @@ bv_me_indicateur_ipr_tot <- bv_me_indicateur_tot %>%
 
 bv_me_indicateur_ipr_tot_logs <- bv_me_indicateur_ipr_tot %>% 
   mutate(across(surface_me:densite_pehm_connecte, log)) %>%
-  mutate(densite_pehm_sur_cours, function(x) log(1+x)) %>%
+  mutate(across(densite_pehm_sur_cours, function(x) log(1+x))) %>%
   mutate(across(densite_pehm_zhp:densite_pehm_mareshm_zhp_zhp, log)) %>%
   mutate(across(prct_intercept:prct_intercept_tdbv, function(x) log(1+x))) %>%
   mutate(across(prct_surf_pe:prct_surf_pehm_mareshm_zhp_zhp, log))
@@ -226,7 +226,7 @@ data <- bv_me_indicateur_ipr_tot_logs %>%
   left_join(y = df_densite_zhp_zhp_synth) %>%
   left_join(y = df_prct_surf_zhp_zhp_synth) 
 
-save(data, file = "data/outputs/w_pe_stat_1.RData")
+save(data, file = "data_processed/w_pe_stat_1.RData")
 
 load(file = "data/outputs/w_pe_stat_1.RData")
 
