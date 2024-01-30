@@ -17,7 +17,10 @@ En second lieu, étudier les liens de corrélation entre ces variables d’impla
         - **zone_marais** (0/1) : attribution manuelle à partir des zones de marais du Scan25
         - **marais_uhc1** (0/1) : intersection avec la couche UHC1  et ("Persistanc" != 'permanent' and  "NatureSE" not in ( 'Plan d''eau - mare' ,  'Plan d''eau - retenue' ,  'Plan d''eau - réservoir', 'PE-réservoir-bassinorage', 'Ecoulement naturel' )) + corrections manuelles loire et vendée) (couche "UHC123internet" depuis le flux WFS du Forum des Marais de l'Atlantique (FMA) : http://wms.reseau-zones-humides.org/cgi-bin/wmsfma)
      
-- Import de la couche dans R, puis création et renseignement des attributs suivants :
+- Import de la couche dans R, puis utilisation du premier script : 
+**w_10_geom_plan_deau_202311.R**
+
+Création et renseignement des attributs suivants :
     -	**bassin_orage** (0/1) : "NatureSE" = 'PE-réservoir-bassinorage'
     -	**bassin_eru** (0/1) : "coef_gravelius" < 1,015 and "NatureSE" not in ('Plan d''eau - mare', 'PE-réservoir-bassinorage', 'PE - réservoir -piscicult', 'Ecoulement naturel')
     -	**a_retirer** (0/1) : filtre des surfaces qui ne sont ni des écoulements naturels, ni des zones estuariennes, ni des zones de marais UHC1, ni des bassins d’orage, ni des bassins ERU
@@ -59,6 +62,9 @@ Les couches de territoires retenues sont les suivantes :
 **bv_ipr** : numérisation des BV amonts des stations de prélèvement piscicoles à partir de r.watershed et r.wateroutlet du logiciel GRASS
 
 **bv_decoup_me** : découpage de la couche des bassins versant des masses d'eau à leur stricte partie territoriale, par différenciation avec les couches "Masses d'eau côtières" et "Masses d'eau de transition".
+
+
+**Utilisation du second script : w_20_geom_synth_territoire_202312.R**
 
 -	Une partie de ce script permet de synthétiser les variables de la couche tronçons de la BD Topage par entité de territoire :
     -	**longueur_ce_topage** : somme des linéaires de tronçons
@@ -113,14 +119,21 @@ Les couches de territoires retenues sont les suivantes :
    
 **3. Plusieurs scripts visent enfin à analyser les liens de corrélation entre implantation de plans d'eau et indicateurs de qualité** :
 
-- **Lien entre BV Masse d'eau et indicateurs de qualité**
+- **Lien entre BV Masse d'eau et indicateurs de qualité** : 
+    - w_30_geom_stations_ipr_202401.R
+    - w_40_statistique_ME_IPR_202401.R
+    - w_50_statistique_ME_score_IPR_202401.R
 
 - **Lien entre BV Masse d'eau et indicateurs de thermie**
-
+    A FAIRE
+    
 - **Lien entre BV Masse d'eau et indicateurs IPR**
-
-
+    - w_31_geom_stations_bv_ipr_202401.R
+    - w_41_exploit_statistique_ME_IPR.R
+    - w_51_exploit_statistique_ME_score_IPR.R
 
 - **Lien entre BV Station piscicole et indicateurs IPR**
-
+    EN COURS
+    
 - **Lien entre BV Station Onde et indicateurs Onde**
+    A FAIRE
