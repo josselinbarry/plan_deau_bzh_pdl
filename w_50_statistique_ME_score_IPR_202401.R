@@ -98,8 +98,8 @@ bv_me_indicateur_tot_ipr <- bv_me_indicateur_tot_ipr %>%
 ##=> correlation type pearson
 
 bv_me_indicateur_tot_ipr_log <- bv_me_indicateur_tot_ipr %>% 
-  mutate(across(surface_me:densite_pehm_connecte, log)) %>%
-  mutate(across(densite_pehm_sur_cours, function(x) log(1+x))) %>%
+  mutate(across(surface_me:densite_pehm_tdbv, log)) %>%
+  mutate(across(densite_pehm_connecte:densite_pehm_sur_cours, function(x) log(1+x))) %>%
   mutate(across(densite_pehm_zhp:densite_pehm_mareshm_zhp_zhp, log)) %>%
   mutate(across(prct_intercept:prct_intercept_tdbv, function(x) log(1+x))) %>%
   mutate(across(prct_surf_pe:prct_surf_pehm_mareshm_zhp_zhp, log))
@@ -125,7 +125,7 @@ prct_tot_ipr <- bv_me_indicateur_tot_ipr_log %>%
          prct_surf_pe_mares_perm,
          prct_surf_pehm_zhp,
          prct_surf_pehm_mareshm_zhp, 
-         prct_surf_pehm_connecte,
+#         prct_surf_pehm_connecte,
          prct_surf_pehm_zhp_zhp,
          prct_surf_pehm_mareshm_zhp_zhp) %>% 
   column_to_rownames(var = "cdeumassed")
