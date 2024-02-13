@@ -26,7 +26,7 @@ source(file = "R/sommer_volume_points_ds_polygone.R")
 # Import des données ----
 
 pe <-
-  sf::read_sf(dsn = "data/outputs/pe_qualifies_20231202.gpkg")%>%
+  sf::read_sf(dsn = "data/pe_qualifies_20240215.gpkg")%>%
   st_transform(crs = 2154)
 
 interstect_test <- sf::read_sf(dsn = "data/testA.gpkg")
@@ -36,11 +36,11 @@ sages <- sf::read_sf(dsn = "data/outputs/sages_20231202.gpkg") %>%
 
   mutate(hors_prelevement = hors_prelevements) 
 
-bv_me_decoup <- sf::read_sf(dsn = "data/outputs/bv_me_decoup_20240110.gpkg") %>%
+bv_me_decoup <- sf::read_sf(dsn = "data/bv_me_surface_qualifies_20240215.gpkg") %>%
   st_transform(crs = 2154) %>%
   mutate(surface_me = st_area(geom)) 
   
-communes <- sf::read_sf(dsn = "data/outputs/communes_20240110.gpkg") %>%
+communes <- sf::read_sf(dsn = "data/communes_qualifies_20240215.gpkg") %>%
   st_transform(crs = 2154)
 
   mutate(surface_com = st_area(geom)) %>%
@@ -108,6 +108,9 @@ zhp53 <- sf::read_sf(dsn = "data/zhp_53_vect.shp") %>%
   st_transform(crs = 2154)
 
 zhp75 <- sf::read_sf(dsn = "data/zhp_75_vect.shp") %>%
+  st_transform(crs = 2154)
+
+marais <- sf::read_sf(dsn = "data/Marais.shp") %>%
   st_transform(crs = 2154)
 
 # Calcul des linéaires topages et strahler max ----
@@ -285,7 +288,7 @@ bv_me_decoup <- bv_me_decoup %>%
   dplyr::left_join(lineaire_topage_pehm_perm_me) %>%
   dplyr::left_join(lineaire_topage_pehm_tdbv_perm_me)
 
-sf::write_sf(obj = bv_me_decoup, dsn = "data/outputs/bv_me_decoup_20231201.gpkg")
+sf::write_sf(obj = bv_me_decoup, dsn = "data/outputs/bv_me_qualifies_20240216.gpkg")
 
 ## Calcul des linéaires topages intersectés par sage ----
 
@@ -405,7 +408,7 @@ communes <- communes %>%
   dplyr::left_join(lineaire_topage_pehm_perm_com, join_by(code_insee == code_insee)) %>%
   dplyr::left_join(lineaire_topage_pehm_tdbv_perm_com, join_by(code_insee == code_insee))
 
-sf::write_sf(obj = communes, dsn = "data/outputs/communes_20231201.gpkg")
+sf::write_sf(obj = communes, dsn = "data/outputs/communes_qualifiees_20240216.gpkg")
 
 ## Calcul des linéaires topages intersectés par bv ipr ----
 
@@ -573,6 +576,58 @@ bv_ipr <- bv_ipr %>%
 
 sf::write_sf(obj = bv_ipr, dsn = "data/outputs/bv_ipr_20240117.gpkg")
 
+# Calcul des surfaces de zones de marais ----
+
+## Calcul des surfaces cumulées zone de marais par BV ME ----
+
+marais_decoup_me <- marais %>% 
+  st_intersection(bv_me_decoup) %>% # découpage des plando selon les masses d'eau
+  mutate(surface_intersect = st_area(.)) %>% # superficie des intersects
+  st_drop_geometry()
+
+sf::write_sf(obj = marais_decoup_me, dsn = "data/outputs/marais_decoup_me_20240110.gpkg")
+
+surf_marais_me <-
+  compter_sommer_simple_surfaces_dans_polygone(
+    couche_surface = marais_decoup_me %>% 
+      units::drop_units(),
+    var_id_polygone = cdeumassed,
+    var_a_sommer = surface_intersect,
+    var_nb_objets = nb_marais,
+    var_somme_surfaces = surf_marais) %>%
+  select(-nb_marais)
+
+bv_me_decoup <- bv_me_decoup %>%
+  dplyr::left_join(surf_marais_me) %>%
+  units::drop_units()
+
+sf::write_sf(obj = bv_me_decoup, dsn = "data/outputs/bv_me_decoup_surf_marais.gpkg")
+
+## Calcul des surfaces cumulées de marais par commune ----
+
+marais_decoup_com <- marais %>% 
+  st_intersection(communes) %>% # découpage des plando selon les masses d'eau
+  mutate(surface_intersect = st_area(.)) %>% # superficie des intersects
+  st_drop_geometry()
+
+sf::write_sf(obj = marais_decoup_com, dsn = "data/outputs/marais_decoup_com_20240117.gpkg")
+
+surf_marais_com <-
+  compter_sommer_simple_surfaces_dans_polygone(
+    couche_surface = marais_decoup_com %>% 
+      units::drop_units(),
+    var_id_polygone = code_insee,
+    var_a_sommer = surface_intersect,
+    var_nb_objets = nb_marais,
+    var_somme_surfaces = surf_marais) %>%
+  select(-nb_marais)
+
+communes <- communes %>%
+  dplyr::left_join(surf_marais_com) %>%
+  units::drop_units()
+
+sf::write_sf(obj = communes, dsn = "data/outputs/communes_surf_marais.gpkg")
+
 # Décompte et calcul des surfaces cumulées de PE et de mares ----
 
 ## Décompte et calcul des surfaces cumulées de PE par BV ME ----
@@ -582,7 +637,7 @@ pe_decoup_me <- pe %>%
   mutate(surface_intersect = st_area(.)) %>% # superficie des intersects
   st_drop_geometry()
 
-sf::write_sf(obj = pe_decoup_me, dsn = "data/outputs/pe_decoup_me_20231200.gpkg")
+sf::write_sf(obj = pe_decoup_me, dsn = "data/outputs/pe_decoup_me_20240215.gpkg")
 
 surf_pe_tot_me <-
   compter_sommer_surfaces_dans_polygone(
@@ -738,7 +793,7 @@ bv_me_decoup <- bv_me_decoup %>%
   dplyr::left_join(surf_pehm_sur_cours_perm_me) %>%
   units::drop_units()
 
-sf::write_sf(obj = bv_me_decoup, dsn = "data/outputs/bv_me_decoup_20231201.gpkg")
+sf::write_sf(obj = bv_me_decoup, dsn = "data/outputs/bv_me_qualifie_20240216.gpkg")
 
 ## Décompte et calcul des surfaces cumulées de mares par BV ME ----
 
@@ -813,7 +868,7 @@ bv_me_decoup <- bv_me_decoup %>%
   dplyr::left_join(surf_mareshm_perm_me) %>%
   units::drop_units()
 
-sf::write_sf(obj = bv_me_decoup, dsn = "data/outputs/bv_me_decoup_20231201.gpkg")
+sf::write_sf(obj = bv_me_decoup, dsn = "data/outputs/bv_me_qualifies_20240216.gpkg")
 
 ## Décompte et calcul des surfaces cumulées de PE par sage ----
 
@@ -1064,7 +1119,7 @@ pe_decoup_com <- pe %>%
   mutate(surface_intersect = st_area(.)) %>% # superficie des intersects
   st_drop_geometry()
 
-sf::write_sf(obj = pe_decoup_com, dsn = "data/outputs/pe_decoup_com_20231200.gpkg")
+sf::write_sf(obj = pe_decoup_com, dsn = "data/outputs/pe_decoup_com_20240216.gpkg")
 
 surf_pe_tot_com <-
   compter_sommer_surfaces_dans_polygone(
@@ -1221,7 +1276,7 @@ communes <- communes %>%
   dplyr::left_join(surf_pehm_sur_cours_perm_com) %>%
   units::drop_units()
 
-sf::write_sf(obj = communes, dsn = "data/outputs/communes_20231201.gpkg")
+sf::write_sf(obj = communes, dsn = "data/outputs/communes_20240216.gpkg")
 
 ## Décompte et calcul des surfaces cumulées de mares par communes ----
 
@@ -1297,7 +1352,7 @@ communes <- communes %>%
   dplyr::left_join(surf_mareshm_perm_com) %>%
   units::drop_units()
 
-sf::write_sf(obj = communes, dsn = "data/outputs/communes_20231202.gpkg")
+sf::write_sf(obj = communes, dsn = "data/outputs/communes_20240216.gpkg")
 
 
 ## Décompte et calcul des surfaces cumulées de PE par BV IPR ----
@@ -1704,7 +1759,7 @@ bv_me_decoup <- bv_me_decoup %>%
   dplyr::left_join(surf_mareshm_perm_zhp_me) %>%
   units::drop_units()
 
-sf::write_sf(obj = bv_me_decoup, dsn = "data/outputs/bv_me_decoup_20240110.gpkg")
+sf::write_sf(obj = bv_me_decoup, dsn = "data/outputs/bv_me_qualifies_20240216.gpkg")
 
 ## Ajout du décompte et calcul des surfaces cumulées de PE en ZHP par COMMUNE ----
 
@@ -1866,7 +1921,7 @@ communes <- communes %>%
   dplyr::left_join(surf_mareshm_perm_zhp_com) %>%  
   units::drop_units()
 
-sf::write_sf(obj = communes, dsn = "data/outputs/communes_20240110.gpkg")
+sf::write_sf(obj = communes, dsn = "data/outputs/communes_qualifiees_20240216.gpkg")
 
 ## Ajout du décompte et calcul des surfaces cumulées de PE en ZHP par SAGE ----
 
@@ -2218,7 +2273,7 @@ bv_me_decoup <- bv_me_decoup %>%
   left_join(surface_moyenne_pe_me) %>%
   left_join(surface_moyenne_pe_tdbv_me)
 
-sf::write_sf(obj = bv_me_decoup, dsn = "data/outputs/bv_me_decoup_20231201.gpkg")
+sf::write_sf(obj = bv_me_decoup, dsn = "data/outputs/bv_me_qualifies_20240216.gpkg")
 
 ## Calcul et jointure de la surface moyenne des PE permanents par sage ----
 
@@ -2262,7 +2317,7 @@ communes <- communes %>%
   left_join(surface_moyenne_pe_com) %>%
   left_join(surface_moyenne_pe_tdbv_com)
 
-sf::write_sf(obj = communes, dsn = "data/outputs/communes_20231201.gpkg")
+sf::write_sf(obj = communes, dsn = "data/outputs/communes_qualifiees_20240216.gpkg")
 
 ## Calcul et jointure de la surface moyenne des PE permanents par bv_ipr ----
 

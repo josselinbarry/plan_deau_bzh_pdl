@@ -388,19 +388,17 @@ manuelles loire et vendée) (couche “UHC123internet” depuis le flux WFS
 du Forum des Marais de l’Atlantique (FMA) : <a href="http://wms.reseau-zones-humides.org/cgi-bin/wmsfma" class="uri">http://wms.reseau-zones-humides.org/cgi-bin/wmsfma</a>)</li>
 </ul></li>
 </ul></li>
-<li>Import de la couche dans R, puis création et renseignement des
-attributs suivants :
-<ul>
-<li><strong>bassin_orage</strong> (0/1) : “NatureSE” =
-‘PE-réservoir-bassinorage’</li>
-<li><strong>bassin_eru</strong> (0/1) : “coef_gravelius” &lt; 1,015 and
-“NatureSE” not in (‘Plan d’‘eau - mare’, ‘PE-réservoir-bassinorage’, ‘PE
-- réservoir -piscicult’, ‘Ecoulement naturel’)</li>
-<li><strong>a_retirer</strong> (0/1) : filtre des surfaces qui ne sont
-ni des écoulements naturels, ni des zones estuariennes, ni des zones de
-marais UHC1, ni des bassins d’orage, ni des bassins ERU</li>
-</ul></li>
+<li>Import de la couche dans R, puis utilisation du premier script :
+<strong>w_10_geom_plan_deau_202311.R</strong></li>
 </ul>
+<p>Création et renseignement des attributs suivants : -
+<strong>bassin_orage</strong> (0/1) : “NatureSE” =
+‘PE-réservoir-bassinorage’ - <strong>bassin_eru</strong> (0/1) :
+“coef_gravelius” &lt; 1,015 and “NatureSE” not in (‘Plan d’‘eau - mare’,
+‘PE-réservoir-bassinorage’, ‘PE - réservoir -piscicult’, ‘Ecoulement
+naturel’) - <strong>a_retirer</strong> (0/1) : filtre des surfaces qui
+ne sont ni des écoulements naturels, ni des zones estuariennes, ni des
+zones de marais UHC1, ni des bassins d’orage, ni des bassins ERU</p>
 <p><strong>Création de la couche Plan d’Eau à partir des entités de la
 couche surfaces élémentaires filtrées précedemment.</strong></p>
 <ul>
@@ -470,6 +468,8 @@ logiciel GRASS</p>
 versant des masses d’eau à leur stricte partie territoriale, par
 différenciation avec les couches “Masses d’eau côtières” et “Masses
 d’eau de transition”.</p>
+<p><strong>Utilisation du second script :
+w_20_geom_synth_territoire_202312.R</strong></p>
 <ul>
 <li><p>Une partie de ce script permet de synthétiser les variables de la
 couche tronçons de la BD Topage par entité de territoire :</p>
@@ -596,15 +596,24 @@ corrélation entre implantation de plans d’eau et indicateurs de
 qualité</strong> :</p>
 <ul>
 <li><p><strong>Lien entre BV Masse d’eau et indicateurs de
-qualité</strong></p></li>
+qualité</strong> :</p>
+<ul>
+<li>w_30_geom_stations_ipr_202401.R</li>
+<li>w_40_statistique_ME_IPR_202401.R</li>
+<li>w_50_statistique_ME_score_IPR_202401.R</li>
+</ul></li>
 <li><p><strong>Lien entre BV Masse d’eau et indicateurs de
-thermie</strong></p></li>
-<li><p><strong>Lien entre BV Masse d’eau et indicateurs
-IPR</strong></p></li>
+thermie</strong> A FAIRE</p></li>
+<li><p><strong>Lien entre BV Masse d’eau et indicateurs IPR</strong></p>
+<ul>
+<li>w_31_geom_stations_bv_ipr_202401.R</li>
+<li>w_41_exploit_statistique_ME_IPR.R</li>
+<li>w_51_exploit_statistique_ME_score_IPR.R</li>
+</ul></li>
 <li><p><strong>Lien entre BV Station piscicole et indicateurs
-IPR</strong></p></li>
-<li><p><strong>Lien entre BV Station Onde et indicateurs
-Onde</strong></p></li>
+IPR</strong> EN COURS</p></li>
+<li><p><strong>Lien entre BV Station Onde et indicateurs Onde</strong> A
+FAIRE</p></li>
 </ul>
 </div>
 
