@@ -36,7 +36,7 @@ sages <- sf::read_sf(dsn = "data/outputs/sages_20231202.gpkg") %>%
 
   mutate(hors_prelevement = hors_prelevements) 
 
-bv_me_decoup <- sf::read_sf(dsn = "data/bv_me_surface_qualifies_20240215.gpkg") %>%
+bv_me_decoup <- sf::read_sf(dsn = "data/outputs/bv_me_qualifies_20240216.gpkg") %>%
   st_transform(crs = 2154) %>%
   mutate(surface_me = st_area(geom)) 
   
@@ -87,8 +87,7 @@ q5 <- sf::read_sf(dsn = "data/q5_zone_etude.gpkg") %>%
   mutate(ID_BDCARTH = as.character(ID_BDCARTH)) %>%
   st_transform(crs = 2154)
 
-departements <- sf::read_sf(dsn = "data/departements.gpkg") %>%
-  select(insee_dep, nom_departement) %>%
+departements <- sf::read_sf(dsn = "data/DEPARTEMENT.shp") %>%
   st_transform(crs = 2154)
 
 regions <- sf::read_sf(dsn = "data/regions.gpkg") %>%
@@ -2340,6 +2339,23 @@ bv_ipr <- bv_ipr %>%
   left_join(surface_moyenne_pe_tdbv_ipr)
 
 sf::write_sf(obj = bv_ipr, dsn = "data/outputs/bv_ipr_20231201.gpkg")
+
+# Ajouts et qualification de l'attribut "departements" ----
+
+me_decoup_dprt <- bv_me_decoup %>% 
+  st_intersection(departements) %>% # découpage des plando selon les masses d'eau
+  mutate(surface_intersect = st_area(.)) %>% # superficie des intersects
+  st_drop_geometry()
+
+dprt_par_me <- me_decoup_dprt %>% 
+  group_by(cdeumassed) %>%
+  summarise(cd_dprt = paste(unique(INSEE_DEP), collapse = ', ')) %>%
+  select(cdeumassed, cd_dprt)
+
+bv_me_decoup <- bv_me_decoup %>%
+  left_join(dprt_par_me) 
+
+sf::write_sf(obj = bv_me_decoup, dsn = "data/outputs/bv_me_qualifies_20240217.gpkg")
 
 # Calcul des débits max ----
 
