@@ -40,7 +40,7 @@ bv_me_decoup <- sf::read_sf(dsn = "data/outputs/bv_me_qualifies_20240216.gpkg") 
   st_transform(crs = 2154) %>%
   mutate(surface_me = st_area(geom)) 
   
-communes <- sf::read_sf(dsn = "data/communes_qualifies_20240215.gpkg") %>%
+communes <- sf::read_sf(dsn = "data/outputs/communes_qualifiees_20240216.gpkg") %>%
   st_transform(crs = 2154)
 
   mutate(surface_com = st_area(geom)) %>%
@@ -50,6 +50,11 @@ communes <- sf::read_sf(dsn = "data/communes_qualifies_20240215.gpkg") %>%
          insee_reg = code_insee_de_la_region)
 
 ce_topage <- sf::read_sf(dsn = "data/TronconHydrographique_Bretagne_Pays_de_la_Loire_non_aqueduc_strahler.gpkg") %>% 
+  rename(cdoh_ce = CdOH) %>%
+  select(cdoh_ce, StreamOrde) %>%
+  st_transform(crs = 2154)
+
+cehm_topage <- sf::read_sf(dsn = "data/TronconHydrographique_hors_marais_Bretagne_Pays_de_la_Loire_non_aqueduc_strahler.gpkg") %>% 
   rename(cdoh_ce = CdOH) %>%
   select(cdoh_ce, StreamOrde) %>%
   st_transform(crs = 2154)
@@ -112,6 +117,7 @@ zhp75 <- sf::read_sf(dsn = "data/zhp_75_vect.shp") %>%
 marais <- sf::read_sf(dsn = "data/Marais.shp") %>%
   st_transform(crs = 2154)
 
+
 # Calcul des linéaires topages et strahler max ----
 
 ## Calcul des linéaires topages et strahler max par me ----
@@ -137,6 +143,34 @@ ce_tdbv_decoup_me <- ce_topage_me %>%
   group_by(cdeumassed) %>%
   summarise(longueur_ce_tdbv_topage = sum(longueur_intersect)) %>%
   select(cdeumassed, longueur_ce_tdbv_topage)
+
+cehm_topage_me <- cehm_topage %>% 
+  st_intersection(bv_me_decoup) %>% # découpage des ce selon les masses d'eau
+  mutate(longueur_intersect = st_length(.)) %>% # longueur des intersects
+  st_drop_geometry()
+  
+sf::write_sf(obj = cehm_topage_me, dsn = "data/outputs/intersection_topage_hm_me_20240220.gpkg")
+
+long_cehm_me <-
+  compter_sommer_simple_surfaces_dans_polygone(
+    couche_surface = cehm_topage_me %>% 
+      units::drop_units(),
+    var_id_polygone = cdeumassed,
+    var_a_sommer = longueur_intersect,
+    var_nb_objets = nb_cehm,
+    var_somme_surfaces = longueur_cehm_topage) %>%
+  select(-nb_cehm)
+
+long_cehm_tdbv_me <-
+  compter_sommer_simple_surfaces_dans_polygone(
+    couche_surface = cehm_topage_me %>% 
+      filter(StreamOrde== 1 | StreamOrde == 2) %>%
+      units::drop_units(),
+    var_id_polygone = cdeumassed,
+    var_a_sommer = longueur_intersect,
+    var_nb_objets = nb_cehm_tdbv,
+    var_somme_surfaces = longueur_cehm_tdbv_topage) %>%
+  select(-nb_cehm)
 
 ## Calcul des linéaires topages et strahler max par sage ----
 
@@ -186,6 +220,35 @@ ce_tdbv_decoup_com <- ce_topage_com %>%
   summarise(longueur_ce_tdbv_topage = sum(longueur_intersect)) %>%
   select(code_insee, longueur_ce_tdbv_topage)
 
+cehm_topage_com <- cehm_topage %>% 
+  st_intersection(communes) %>% # découpage des ce selon les masses d'eau
+  mutate(longueur_intersect = st_length(.)) %>% # longueur des intersects
+  st_drop_geometry()
+
+sf::write_sf(obj = cehm_topage_com, dsn = "data/outputs/intersection_topage_hm_com_20240220.gpkg")
+
+long_cehm_com <-
+  compter_sommer_simple_surfaces_dans_polygone(
+    couche_surface = cehm_topage_com %>% 
+      units::drop_units(),
+    var_id_polygone = code_insee,
+    var_a_sommer = longueur_intersect,
+    var_nb_objets = nb_cehm,
+    var_somme_surfaces = longueur_cehm_topage) %>%
+  select(-nb_cehm)
+
+long_cehm_tdbv_com <-
+  compter_sommer_simple_surfaces_dans_polygone(
+    couche_surface = cehm_topage_com %>% 
+      filter(StreamOrde== 1 | StreamOrde == 2) %>%
+      units::drop_units(),
+    var_id_polygone = code_insee,
+    var_a_sommer = longueur_intersect,
+    var_nb_objets = nb_cehm_tdbv,
+    var_somme_surfaces = longueur_cehm_tdbv_topage) %>%
+  select(-nb_cehm_tdbv)
+
+
 ## Calcul des linéaires topages et strahler max par bv ipr ----
 
 ce_topage_ipr <- ce_topage %>% 
@@ -213,7 +276,11 @@ ce_tdbv_decoup_ipr <- ce_topage_ipr %>%
 
 bv_me_decoup <- bv_me_decoup %>%
   dplyr::left_join(ce_decoup_me) %>%
-  dplyr::left_join(ce_tdbv_decoup_me)
+  dplyr::left_join(ce_tdbv_decoup_me) %>%
+  dplyr::left_join(long_cehm_me) %>%
+  dplyr::left_join(long_cehm_tdbv_me)
+
+sf::write_sf(obj = bv_me_decoup, dsn = "data/outputs/bv_me_qualifies_20240225.gpkg")
 
 sages <- sages %>% 
   dplyr::left_join(ce_decoup_sage) %>%
@@ -221,7 +288,11 @@ sages <- sages %>%
 
 communes <- communes %>%
   dplyr::left_join(ce_decoup_com) %>%
-  dplyr::left_join(ce_tdbv_decoup_com) 
+  dplyr::left_join(ce_tdbv_decoup_com) %>%
+  dplyr::left_join(long_cehm_com) %>%
+  dplyr::left_join(long_cehm_tdbv_com)
+
+sf::write_sf(obj = communes, dsn = "data/outputs/communes_qualifiees_20240225.gpkg")
 
 bv_ipr <- bv_ipr %>%
   dplyr::left_join(ce_decoup_ipr) %>%
@@ -479,10 +550,10 @@ zhp_tot <-
 
 zhp_decoup_me <- zhp_tot %>% 
   st_intersection(bv_me_decoup) %>% # découpage des plando selon les masses d'eau
-  mutate(surface_intersect = st_area(.)) %>% # superficie des intersects
+  mutate(surface_intersect = st_area(.)) #%>% # superficie des intersects
   st_drop_geometry()
 
-sf::write_sf(obj = zhp_decoup_me, dsn = "data/outputs/zhp_decoup_me_20240110.gpkg")
+sf::write_sf(obj = zhp_decoup_me, dsn = "data/outputs/zhp_decoup_me_20240220.gpkg")
 
 surf_zhp_me <-
   compter_sommer_simple_surfaces_dans_polygone(
@@ -500,14 +571,64 @@ bv_me_decoup <- bv_me_decoup %>%
 
 sf::write_sf(obj = bv_me_decoup, dsn = "data/outputs/bv_me_decoup_20240117.gpkg")
 
+## Calcul des surfaces cumulées de ZHP hors marais par me ---- 
+
+zhp24_hm <- zhp24 %>% 
+  st_difference(zhp24, marais) %>% 
+  mutate(surface_intersect = st_area(.))
+
+zhp28_hm <- zhp28 %>% 
+  st_difference(zhp24, marais) %>% 
+  mutate(surface_intersect = st_area(.))
+
+zhp52_hm <- zhp52 %>% 
+  st_difference(zhp24, marais) %>% 
+  mutate(surface_intersect = st_area(.))
+
+zhp53_hm <- zhp53 %>% 
+  st_difference(zhp24, marais) %>% 
+  mutate(surface_intersect = st_area(.))
+
+zhp75_hm <- zhp75 %>% 
+  st_difference(zhp24, marais) %>% 
+  mutate(surface_intersect = st_area(.))
+
+zhphm_tot <-
+  dplyr::bind_rows(
+    zhp24_hm, zhp28_hm, zhp53_hm, zhp52_hm, zhp75_hm)
+
+sf::write_sf(obj = zhphm_tot, dsn = "data/outputs/zhphm_tot_20240220.gpkg")
+
+zhphm_decoup_me <- zhphm_tot %>% 
+  st_intersection(bv_me_decoup) %>% 
+  mutate(surface_intersect = st_area(.)) 
+
+sf::write_sf(obj = zhphm_decoup_me, dsn = "data/outputs/zhphm_decoup_me_20240220.gpkg")
+
+surf_zhphm_me <-
+  compter_sommer_simple_surfaces_dans_polygone(
+    couche_surface = zhphm_decoup_me %>% 
+      units::drop_units(),
+    var_id_polygone = cdeumassed,
+    var_a_sommer = surface_intersect,
+    var_nb_objets = nb_zhphm,
+    var_somme_surfaces = surf_zhphm) %>%
+  select(-nb_zhphm)
+
+bv_me_decoup <- bv_me_decoup %>%
+  dplyr::left_join(surf_zhphm_me) %>%
+  units::drop_units()
+
+sf::write_sf(obj = bv_me_decoup, dsn = "data/outputs/bv_me_qualifies_20240220.gpkg")
+
 ## Calcul des surfaces cumulées de ZHP par commune ----
 
 zhp_decoup_com <- zhp_tot %>% 
   st_intersection(communes) %>% # découpage des plando selon les masses d'eau
-  mutate(surface_intersect = st_area(.)) %>% # superficie des intersects
+  mutate(surface_intersect = st_area(.)) #%>% # superficie des intersects
   st_drop_geometry()
 
-sf::write_sf(obj = zhp_decoup_com, dsn = "data/outputs/zhp_decoup_com_20240117.gpkg")
+sf::write_sf(obj = zhp_decoup_com, dsn = "data/outputs/zhp_decoup_com_20240220.gpkg")
 
 surf_zhp_com <-
   compter_sommer_simple_surfaces_dans_polygone(
@@ -524,6 +645,30 @@ communes <- communes %>%
   units::drop_units()
 
 sf::write_sf(obj = communes, dsn = "data/outputs/communes_20240117.gpkg")
+
+## Calcul des surfaces cumulées de ZHP hors marais par commune ----
+
+zhphm_decoup_com <- zhphm_tot %>% 
+  st_intersection(communes) %>% 
+  mutate(surface_intersect = st_area(.)) 
+
+sf::write_sf(obj = zhphm_decoup_com, dsn = "data/outputs/zhphm_decoup_com_20240220.gpkg")
+
+surf_zhphm_com <-
+  compter_sommer_simple_surfaces_dans_polygone(
+    couche_surface = zhphm_decoup_com %>% 
+      units::drop_units(),
+    var_id_polygone = code_insee,
+    var_a_sommer = surface_intersect,
+    var_nb_objets = nb_zhphm,
+    var_somme_surfaces = surf_zhphm) %>%
+  select(-nb_zhphm)
+
+communes <- communes %>%
+  dplyr::left_join(surf_zhphm_me) %>%
+  units::drop_units()
+
+sf::write_sf(obj = communes, dsn = "data/outputs/communes_qualifiees_20240220.gpkg")
 
 ## Calcul des surfaces cumulées de ZHP par SAGE ----
 
