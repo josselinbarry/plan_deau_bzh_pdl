@@ -724,7 +724,7 @@ bv_ipr <- bv_ipr %>%
 
 sf::write_sf(obj = bv_ipr, dsn = "data/outputs/bv_ipr_20240605.gpkg")
 
-## XXX Calcul des surfaces cumulées de ZHP hors marais par BV IPR ----
+## Calcul des surfaces cumulées de ZHP hors marais par BV IPR ----
 
 zhphm_decoup_ipr <- zhphm_tot %>% 
   st_intersection(bv_ipr) %>% 
@@ -804,6 +804,31 @@ communes <- communes %>%
   units::drop_units()
 
 sf::write_sf(obj = communes, dsn = "data/outputs/communes_surf_marais.gpkg")
+
+## Calcul des surfaces cumulées de marais par bv ipr ----
+
+marais_decoup_ipr <- marais %>% 
+  st_intersection(bv_ipr) %>% # découpage des plando selon les masses d'eau
+  mutate(surface_intersect = st_area(.)) %>% # superficie des intersects
+  st_drop_geometry()
+
+sf::write_sf(obj = marais_decoup_ipr, dsn = "data/outputs/marais_decoup_ipr_20240117.gpkg")
+
+surf_marais_ipr <-
+  compter_sommer_simple_surfaces_dans_polygone(
+    couche_surface = marais_decoup_ipr %>% 
+      units::drop_units(),
+    var_id_polygone = sta_id,
+    var_a_sommer = surface_intersect,
+    var_nb_objets = nb_marais,
+    var_somme_surfaces = surf_marais) %>%
+  select(-nb_marais)
+
+bv_ipr <- bv_ipr %>%
+  dplyr::left_join(surf_marais_ipr) %>%
+  units::drop_units()
+
+sf::write_sf(obj = bv_ipr, dsn = "data/outputs/bv_ipr_20240610.gpkg")
 
 # Décompte et calcul des surfaces cumulées de PE et de mares ----
 
@@ -1539,12 +1564,12 @@ pe_decoup_ipr <- pe %>%
   mutate(surface_intersect = st_area(.)) %>% # superficie des intersects
   st_drop_geometry()
 
-sf::write_sf(obj = pe_decoup_ipr, dsn = "data/outputs/pe_decoup_ipr_20231200.gpkg")
+sf::write_sf(obj = pe_decoup_ipr, dsn = "data/outputs/pe_decoup_ipr_20240610.gpkg")
 
 surf_pe_tot_ipr <-
   compter_sommer_surfaces_dans_polygone(
     couche_surface = pe_decoup_ipr %>% units::drop_units() %>% filter(mare == 0),
-    var_id_polygone = sta_code_sandre,
+    var_id_polygone = sta_id,
     var_a_sommer = surface_intersect,
     var_nb_objets = nb_pe_tot,
     var_somme_surfaces = surf_pe_tot,
@@ -1558,7 +1583,7 @@ surf_pe_tot_ipr <-
 surf_pehm_tot_ipr <-
   compter_sommer_surfaces_dans_polygone(
     couche_surface = pe_decoup_ipr %>% units::drop_units() %>% filter(mare == 0),
-    var_id_polygone = sta_code_sandre,
+    var_id_polygone = sta_id,
     var_a_sommer = surface_intersect,
     var_nb_objets = nb_pehm_tot,
     var_somme_surfaces = surf_pehm_tot,
@@ -1572,7 +1597,7 @@ surf_pehm_tot_ipr <-
 surf_pe_perm_ipr <-
   compter_sommer_surfaces_dans_polygone(
     couche_surface = pe_decoup_ipr %>% units::drop_units() %>% filter(mare == 0),
-    var_id_polygone = sta_code_sandre,
+    var_id_polygone = sta_id,
     var_a_sommer = surface_intersect,
     var_nb_objets = nb_pe_perm,
     var_somme_surfaces = surf_pe_perm,
@@ -1586,7 +1611,7 @@ surf_pe_perm_ipr <-
 surf_pehm_perm_ipr <-
   compter_sommer_surfaces_dans_polygone(
     couche_surface = pe_decoup_ipr %>% units::drop_units() %>% filter(mare == 0),
-    var_id_polygone = sta_code_sandre,
+    var_id_polygone = sta_id,
     var_a_sommer = surface_intersect,
     var_nb_objets = nb_pehm_perm,
     var_somme_surfaces = surf_pehm_perm,
@@ -1600,7 +1625,7 @@ surf_pehm_perm_ipr <-
 surf_pehm_tdbv_tot_ipr <-
   compter_sommer_surfaces_dans_polygone(
     couche_surface = pe_decoup_ipr %>% units::drop_units() %>% filter(mare == 0),
-    var_id_polygone = sta_code_sandre,
+    var_id_polygone = sta_id,
     var_a_sommer = surface_intersect,
     var_nb_objets = nb_pehm_tdbv_tot,
     var_somme_surfaces = surf_pehm_tdbv_tot,
@@ -1614,7 +1639,7 @@ surf_pehm_tdbv_tot_ipr <-
 surf_pehm_tdbv_perm_ipr <-
   compter_sommer_surfaces_dans_polygone(
     couche_surface = pe_decoup_ipr %>% units::drop_units() %>% filter(mare == 0),
-    var_id_polygone = sta_code_sandre,
+    var_id_polygone = sta_id,
     var_a_sommer = surface_intersect,
     var_nb_objets = nb_pehm_tdbv_perm,
     var_somme_surfaces = surf_pehm_tdbv_perm,
@@ -1628,7 +1653,7 @@ surf_pehm_tdbv_perm_ipr <-
 surf_pehm_connecte_tot_ipr <-
   compter_sommer_surfaces_dans_polygone(
     couche_surface = pe_decoup_ipr %>% units::drop_units() %>% filter(mare == 0),
-    var_id_polygone = sta_code_sandre,
+    var_id_polygone = sta_id,
     var_a_sommer = surface_intersect,
     var_nb_objets = nb_pehm_connecte_tot,
     var_somme_surfaces = surf_pehm_connecte_tot,
@@ -1642,7 +1667,7 @@ surf_pehm_connecte_tot_ipr <-
 surf_pehm_connecte_perm_ipr <-
   compter_sommer_surfaces_dans_polygone(
     couche_surface = pe_decoup_ipr %>% units::drop_units() %>% filter(mare == 0),
-    var_id_polygone = sta_code_sandre,
+    var_id_polygone = sta_id,
     var_a_sommer = surface_intersect,
     var_nb_objets = nb_pehm_connecte_perm,
     var_somme_surfaces = surf_pehm_connecte_perm,
@@ -1656,7 +1681,7 @@ surf_pehm_connecte_perm_ipr <-
 surf_pehm_sur_cours_tot_ipr <-
   compter_sommer_surfaces_dans_polygone(
     couche_surface = pe_decoup_ipr %>% units::drop_units() %>% filter(mare == 0),
-    var_id_polygone = sta_code_sandre,
+    var_id_polygone = sta_id,
     var_a_sommer = surface_intersect,
     var_nb_objets = nb_pehm_sur_cours_tot,
     var_somme_surfaces = surf_pehm_sur_cours_tot,
@@ -1669,7 +1694,7 @@ surf_pehm_sur_cours_tot_ipr <-
 surf_pehm_sur_cours_perm_ipr <-
   compter_sommer_surfaces_dans_polygone(
     couche_surface = pe_decoup_ipr %>% units::drop_units() %>% filter(mare == 0),
-    var_id_polygone = sta_code_sandre,
+    var_id_polygone = sta_id,
     var_a_sommer = surface_intersect,
     var_nb_objets = nb_pehm_sur_cours_perm,
     var_somme_surfaces = surf_pehm_sur_cours_perm,
@@ -1695,7 +1720,7 @@ bv_ipr <- bv_ipr %>%
   dplyr::left_join(surf_pehm_sur_cours_perm_ipr) %>%
   units::drop_units()
 
-sf::write_sf(obj = bv_ipr, dsn = "data/outputs/bv_ipr_20231201.gpkg")
+sf::write_sf(obj = bv_ipr, dsn = "data/outputs/bv_ipr_20240610.gpkg")
 
 ## Décompte et calcul des surfaces cumulées de mares par BV IPR ----
 
@@ -1709,7 +1734,7 @@ sf::write_sf(obj = pe_decoup_ipr, dsn = "data/outputs/pe_decoup_ipr_20231200.gpk
 surf_mares_tot_ipr <-
   compter_sommer_surfaces_dans_polygone(
     couche_surface = pe_decoup_ipr %>% units::drop_units() %>% filter(mare == 1),
-    var_id_polygone = sta_code_sandre,
+    var_id_polygone = sta_id,
     var_a_sommer = surface_intersect,
     var_nb_objets = nb_mares_tot,
     var_somme_surfaces = surf_mares_tot,
@@ -1723,7 +1748,7 @@ surf_mares_tot_ipr <-
 surf_mareshm_tot_ipr <-
   compter_sommer_surfaces_dans_polygone(
     couche_surface = pe_decoup_ipr %>% units::drop_units() %>% filter(mare == 1),
-    var_id_polygone = sta_code_sandre,
+    var_id_polygone = sta_id,
     var_a_sommer = surface_intersect,
     var_nb_objets = nb_mareshm_tot,
     var_somme_surfaces = surf_mareshm_tot,
@@ -1737,7 +1762,7 @@ surf_mareshm_tot_ipr <-
 surf_mares_perm_ipr <-
   compter_sommer_surfaces_dans_polygone(
     couche_surface = pe_decoup_ipr %>% units::drop_units() %>% filter(mare == 1),
-    var_id_polygone = sta_code_sandre,
+    var_id_polygone = sta_id,
     var_a_sommer = surface_intersect,
     var_nb_objets = nb_mares_perm,
     var_somme_surfaces = surf_mares_perm,
@@ -1751,7 +1776,7 @@ surf_mares_perm_ipr <-
 surf_mareshm_perm_ipr <-
   compter_sommer_surfaces_dans_polygone(
     couche_surface = pe_decoup_ipr %>% units::drop_units() %>% filter(mare == 1),
-    var_id_polygone = sta_code_sandre,
+    var_id_polygone = sta_id,
     var_a_sommer = surface_intersect,
     var_nb_objets = nb_mareshm_perm,
     var_somme_surfaces = surf_mareshm_perm,
@@ -1772,7 +1797,7 @@ bv_ipr <- bv_ipr %>%
 
   units::drop_units()
 
-sf::write_sf(obj = bv_ipr, dsn = "data/outputs/bv_ipr_20231202.gpkg")
+sf::write_sf(obj = bv_ipr, dsn = "data/outputs/bv_ipr_20240610.gpkg")
 
 # Ajout du décompte et calcul des surfaces cumulées de PE et mares en ZHP ----
 
@@ -2276,7 +2301,7 @@ surf_pe_zhp_tot_ipr <-
       units::drop_units() %>% 
       filter(mare == 0) %>%
       filter(zhp == 1),
-    var_id_polygone = sta_code_sandre,
+    var_id_polygone = sta_id,
     var_a_sommer = surface_intersect,
     var_nb_objets = nb_pe_zhp_tot,
     var_somme_surfaces = surf_pe_zhp_tot,
@@ -2293,7 +2318,7 @@ surf_pehm_zhp_tot_ipr <-
       units::drop_units() %>% 
       filter(mare == 0) %>%
       filter(zhp == 1),
-    var_id_polygone = sta_code_sandre,
+    var_id_polygone = sta_id,
     var_a_sommer = surface_intersect,
     var_nb_objets = nb_pehm_zhp_tot,
     var_somme_surfaces = surf_pehm_zhp_tot,
@@ -2310,7 +2335,7 @@ surf_pe_perm_zhp_ipr <-
       units::drop_units() %>% 
       filter(mare == 0) %>%
       filter(zhp == 1),
-    var_id_polygone = sta_code_sandre,
+    var_id_polygone = sta_id,
     var_a_sommer = surface_intersect,
     var_nb_objets = nb_pe_perm_zhp,
     var_somme_surfaces = surf_pe_perm_zhp,
@@ -2327,7 +2352,7 @@ surf_pehm_perm_zhp_ipr <-
       units::drop_units() %>% 
       filter(mare == 0) %>%
       filter(zhp == 1),
-    var_id_polygone = sta_code_sandre,
+    var_id_polygone = sta_id,
     var_a_sommer = surface_intersect,
     var_nb_objets = nb_pehm_perm_zhp,
     var_somme_surfaces = surf_pehm_perm_zhp,
@@ -2345,7 +2370,7 @@ surf_mares_zhp_tot_ipr <-
       units::drop_units() %>% 
       filter(mare == 1) %>%
       filter(zhp == 1),
-    var_id_polygone = sta_code_sandre,
+    var_id_polygone = sta_id,
     var_a_sommer = surface_intersect,
     var_nb_objets = nb_mares_zhp_tot,
     var_somme_surfaces = surf_mares_zhp_tot,
@@ -2362,7 +2387,7 @@ surf_mareshm_zhp_tot_ipr <-
       units::drop_units() %>% 
       filter(mare == 1) %>%
       filter(zhp == 1),
-    var_id_polygone = sta_code_sandre,
+    var_id_polygone = sta_id,
     var_a_sommer = surface_intersect,
     var_nb_objets = nb_mareshm_zhp_tot,
     var_somme_surfaces = surf_mareshm_zhp_tot,
@@ -2379,7 +2404,7 @@ surf_mares_perm_zhp_ipr <-
       units::drop_units() %>% 
       filter(mare == 1) %>%
       filter(zhp == 1),
-    var_id_polygone = sta_code_sandre,
+    var_id_polygone = sta_id,
     var_a_sommer = surface_intersect,
     var_nb_objets = nb_mares_perm_zhp,
     var_somme_surfaces = surf_mares_perm_zhp,
@@ -2396,7 +2421,7 @@ surf_mareshm_perm_zhp_ipr <-
       units::drop_units() %>% 
       filter(mare == 1) %>%
       filter(zhp == 1),
-    var_id_polygone = sta_code_sandre,
+    var_id_polygone = sta_id,
     var_a_sommer = surface_intersect,
     var_nb_objets = nb_mareshm_perm_zhp,
     var_somme_surfaces = surf_mareshm_perm_zhp,
@@ -2420,13 +2445,13 @@ bv_ipr <- bv_ipr %>%
   dplyr::left_join(surf_mareshm_perm_zhp_ipr) %>%
   units::drop_units()
 
-sf::write_sf(obj = bv_ipr, dsn = "data/outputs/bv_ipr_20240110.gpkg")
+sf::write_sf(obj = bv_ipr, dsn = "data/outputs/bv_ipr_20240610.gpkg")
 
 # Ajout de la proportion de surface en ZHP ----
 
 ## Ajout de la proportion de surface en ZHP ----
 
-
+NON
 
 # Calcul et jointure de la surface moyenne des PE permanents ----
 
@@ -2500,23 +2525,23 @@ sf::write_sf(obj = communes, dsn = "data/outputs/communes_qualifiees_20240216.gp
 
 surface_moyenne_pe_ipr <- pe_decoup_ipr %>%
   filter(mare == 0 & zone_marais == 0 & Persistanc == 'permanent') %>%
-  group_by(sta_code_sandre) %>%
+  group_by(sta_id) %>%
   summarise(surface_moy_pe_perm = mean(surface_m2)) %>%
   st_drop_geometry() %>%
-  select(sta_code_sandre, surface_moy_pe_perm)
+  select(sta_id, surface_moy_pe_perm)
 
 surface_moyenne_pe_tdbv_ipr <- pe_decoup_ipr %>%
   filter(mare == 0 & zone_marais == 0 & Persistanc == 'permanent' & StreamOrde < 3) %>%
-  group_by(sta_code_sandre) %>%
+  group_by(sta_id) %>%
   summarise(surface_moy_pe_perm_tdbv = mean(surface_m2)) %>%
   st_drop_geometry() %>%
-  select(sta_code_sandre, surface_moy_pe_perm_tdbv)
+  select(sta_id, surface_moy_pe_perm_tdbv)
 
 bv_ipr <- bv_ipr %>%
   left_join(surface_moyenne_pe_ipr) %>%
   left_join(surface_moyenne_pe_tdbv_ipr)
 
-sf::write_sf(obj = bv_ipr, dsn = "data/outputs/bv_ipr_20231201.gpkg")
+sf::write_sf(obj = bv_ipr, dsn = "data/outputs/bv_ipr_20240610.gpkg")
 
 # Ajouts et qualification de l'attribut "departements" ----
 
@@ -2642,10 +2667,10 @@ qa_ipr <- qa %>%
 sf::write_sf(obj = qa_ipr, dsn = "data/outputs/qa_ipr_20231200.gpkg")
 
 qa_max_ipr <- qa_ipr %>%
-  select(sta_code_sandre, QABASN, QAMOY_MN, QAHAUN) %>%
-  group_by(sta_code_sandre) %>%
+  select(sta_id, QABASN, QAMOY_MN, QAHAUN) %>%
+  group_by(sta_id) %>%
   summarise(QAMOY_max = max (QAMOY_MN)) %>%
-  select(sta_code_sandre, QAMOY_max)
+  select(sta_id, QAMOY_max)
 
 q5_ipr <- q5 %>% 
   st_intersection(bv_ipr) %>%
@@ -2654,16 +2679,16 @@ q5_ipr <- q5 %>%
 sf::write_sf(obj = q5_ipr, dsn = "data/outputs/q5_ipr_20231200.gpkg")
 
 q5_max_ipr <- q5_ipr %>%
-  select(sta_code_sandre, Q5BASN, Q5MOY_MN, Q5HAUN) %>%
-  group_by(sta_code_sandre) %>%
+  select(sta_id, Q5BASN, Q5MOY_MN, Q5HAUN) %>%
+  group_by(sta_id) %>%
   summarise(Q5MOY_max = max (Q5MOY_MN)) %>%
-  select(sta_code_sandre, Q5MOY_max)
+  select(sta_id, Q5MOY_max)
 
 bv_ipr <- bv_ipr %>%
   left_join(qa_max_ipr) %>%
   left_join(q5_max_ipr)
 
-sf::write_sf(obj = bv_ipr, dsn = "data/outputs/bv_ipr_20231201.gpkg")
+sf::write_sf(obj = bv_ipr, dsn = "data/outputs/bv_ipr_20240610.gpkg")
 
 # Synthèse des prélèvements en retenue ----
 
