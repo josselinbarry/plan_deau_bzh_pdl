@@ -340,7 +340,7 @@ lineaire_topage_pe <- ce_topage %>%
   st_intersection(pe) %>% # découpage des ce selon les pe
   mutate(longueur_topage_intersect = st_length(.)) 
 
-sf::write_sf(obj = lineaire_topage_pe, dsn = "data/outputs/lineaires_topage_pe.gpkg")
+sf::write_sf(obj = lineaire_topage_pe, dsn = "data/outputs/lineaires_topage_pe_20240605.gpkg")
 
 lineaire_intersecte_par_pe <- lineaire_topage_pe %>%
   select(cdoh_plando, longueur_topage_intersect) %>%

@@ -59,16 +59,15 @@ cehm_topage <- sf::read_sf(dsn = "data/TronconHydrographique_hors_marais_Bretagn
   select(cdoh_ce, StreamOrde) %>%
   st_transform(crs = 2154)
 
-bv_ipr <- sf::read_sf(dsn = "data/outputs/bv_ipr_20240110.gpkg") %>%
-  st_transform(crs = 2154)
-
+bv_ipr <- sf::read_sf(dsn = "data/bv_stat_ipr_zone_etude.gpkg") %>%
+  st_transform(crs = 2154) %>%
   mutate(surface_ipr = st_area(geom)) 
 
 lineaire_topage_pe <- sf::read_sf(dsn = "data/outputs/lineaires_topage_pe.gpkg")
 
 ce_topage_me <- sf::read_sf(dsn = "data/outputs/intersection_topage_me_20231128.gpkg")
 
-ce_topage_ipr <- sf::read_sf(dsn = "data/outputs/ce_topage_ipr_20231200.gpkg")
+ce_topage_ipr <- sf::read_sf(dsn = "data/outputs/ce_topage_ipr_20240425.gpkg")
 
 ce_topage_sage <- sf::read_sf(dsn = "data/outputs/intersection_topage_sage_20231128.gpkg")
 
@@ -112,6 +111,21 @@ zhp53 <- sf::read_sf(dsn = "data/zhp_53_vect.shp") %>%
   st_transform(crs = 2154)
 
 zhp75 <- sf::read_sf(dsn = "data/zhp_75_vect.shp") %>%
+  st_transform(crs = 2154)
+
+zhp24_hm <- sf::read_sf(dsn = "data/zhp_hm_24_vect.shp") %>%
+  st_transform(crs = 2154)
+
+zhp28_hm <- sf::read_sf(dsn = "data/zhp_hm_28_vect.shp") %>%
+  st_transform(crs = 2154)
+
+zhp52_hm <- sf::read_sf(dsn = "data/zhp_hm_52_vect.shp") %>%
+  st_transform(crs = 2154)
+
+zhphm_53 <- sf::read_sf(dsn = "data/zhp_hm_53_vect.shp") %>%
+  st_transform(crs = 2154)
+
+zhphm_75 <- sf::read_sf(dsn = "data/zhp_hm_75_vect.shp") %>%
   st_transform(crs = 2154)
 
 marais <- sf::read_sf(dsn = "data/Marais.shp") %>%
@@ -170,7 +184,7 @@ long_cehm_tdbv_me <-
     var_a_sommer = longueur_intersect,
     var_nb_objets = nb_cehm_tdbv,
     var_somme_surfaces = longueur_cehm_tdbv_topage) %>%
-  select(-nb_cehm)
+  select(-nb_cehm_tdbv)
 
 ## Calcul des linéaires topages et strahler max par sage ----
 
@@ -253,24 +267,23 @@ long_cehm_tdbv_com <-
 
 ce_topage_ipr <- ce_topage %>% 
   st_intersection(bv_ipr) %>% # découpage des ce selon les masses d'eau
-  mutate(longueur_intersect = st_length(.)) %>%
-  st_drop_geometry()  
+  mutate(longueur_intersect = st_length(.)) 
 
-sf::write_sf(obj = ce_topage_ipr, dsn = "data/outputs/ce_topage_ipr_20231200.gpkg")
+sf::write_sf(obj = ce_topage_ipr, dsn = "data/outputs/ce_topage_ipr_20240605.gpkg")
 
 ce_decoup_ipr <- ce_topage_ipr %>%
-  select(cdoh_ce, sta_code_sandre, longueur_intersect, StreamOrde) %>%
-  group_by(sta_code_sandre) %>%
+  select(cdoh_ce, sta_id, longueur_intersect, StreamOrde) %>%
+  group_by(sta_id) %>%
   summarise(strahler_max = max (StreamOrde),
             longueur_ce_topage = sum(longueur_intersect)) %>%
-  select(sta_code_sandre, strahler_max, longueur_ce_topage)
+  select(sta_id, strahler_max, longueur_ce_topage)
 
 ce_tdbv_decoup_ipr <- ce_topage_ipr %>%
   filter(StreamOrde == 1 | StreamOrde == 2) %>%
-  select(cdoh_ce, sta_code_sandre, longueur_intersect) %>%
-  group_by(sta_code_sandre) %>%
+  select(cdoh_ce, sta_id, longueur_intersect) %>%
+  group_by(sta_id) %>%
   summarise(longueur_ce_tdbv_topage = sum(longueur_intersect)) %>%
-  select(sta_code_sandre, longueur_ce_tdbv_topage)
+  select(sta_id, longueur_ce_tdbv_topage)
 
 ## Jointure des linéaires topages par objet ----
 
@@ -295,8 +308,12 @@ communes <- communes %>%
 sf::write_sf(obj = communes, dsn = "data/outputs/communes_qualifiees_20240225.gpkg")
 
 bv_ipr <- bv_ipr %>%
-  dplyr::left_join(ce_decoup_ipr) %>%
-  dplyr::left_join(ce_tdbv_decoup_ipr) 
+  dplyr::left_join(ce_decoup_ipr %>%
+                     st_drop_geometry()) %>%
+  dplyr::left_join(ce_tdbv_decoup_ipr %>%
+                     st_drop_geometry()) 
+
+sf::write_sf(obj = bv_ipr, dsn = "data/outputs/bv_stat_ipr_20240605.gpkg")
 
 # Calcul des linéaires topages intersectés ----
 
@@ -489,44 +506,44 @@ lineaire_topage_pe_ipr <- lineaire_topage_pe %>%
 
 lineaire_topage_pe_tot_ipr <- lineaire_topage_pe_ipr %>% 
   st_drop_geometry() %>%
-  group_by(sta_code_sandre) %>%
+  group_by(sta_id) %>%
   summarise(longueur_topage_intersecte_pe_tot = sum(longueur_intersect)) %>%
-  select(sta_code_sandre, longueur_topage_intersecte_pe_tot)
+  select(sta_id, longueur_topage_intersecte_pe_tot)
 
 lineaire_topage_pehm_tot_ipr <- lineaire_topage_pe_ipr %>% 
   filter(zone_marais == 0) %>%  
   st_drop_geometry() %>%
-  group_by(sta_code_sandre) %>%
+  group_by(sta_id) %>%
   summarise(longueur_topage_intersecte_pehm_tot = sum(longueur_intersect)) %>%
-  select(sta_code_sandre, longueur_topage_intersecte_pehm_tot)
+  select(sta_id, longueur_topage_intersecte_pehm_tot)
 
 lineaire_topage_pehm_tdbv_tot_ipr <- lineaire_topage_pe_ipr %>% 
   filter(zone_marais == 0 & StreamOrde <3) %>%  
   st_drop_geometry() %>%
-  group_by(sta_code_sandre) %>%
+  group_by(sta_id) %>%
   summarise(longueur_topage_intersecte_pehm_tdbv_tot = sum(longueur_intersect)) %>%
-  select(sta_code_sandre, longueur_topage_intersecte_pehm_tdbv_tot)
+  select(sta_id, longueur_topage_intersecte_pehm_tdbv_tot)
 
 lineaire_topage_pe_perm_ipr <- lineaire_topage_pe_ipr %>% 
   filter(Persistanc == "permanent") %>%  
   st_drop_geometry() %>%
-  group_by(sta_code_sandre) %>%
+  group_by(sta_id) %>%
   summarise(longueur_topage_intersecte_pe_perm = sum(longueur_intersect)) %>%
-  select(sta_code_sandre, longueur_topage_intersecte_pe_perm)
+  select(sta_id, longueur_topage_intersecte_pe_perm)
 
 lineaire_topage_pehm_perm_ipr <- lineaire_topage_pe_ipr %>% 
   filter(zone_marais == 0 & Persistanc == "permanent") %>%  
   st_drop_geometry() %>%
-  group_by(sta_code_sandre) %>%
+  group_by(sta_id) %>%
   summarise(longueur_topage_intersecte_pehm_perm = sum(longueur_intersect)) %>%
-  select(sta_code_sandre, longueur_topage_intersecte_pehm_perm)
+  select(sta_id, longueur_topage_intersecte_pehm_perm)
 
 lineaire_topage_pehm_tdbv_perm_ipr <- lineaire_topage_pe_ipr %>% 
   filter(zone_marais == 0 & Persistanc == "permanent" & StreamOrde <3) %>%  
   st_drop_geometry() %>%
-  group_by(sta_code_sandre) %>%
+  group_by(sta_id) %>%
   summarise(longueur_topage_intersecte_pehm_tdbv_perm = sum(longueur_intersect)) %>%
-  select(sta_code_sandre, longueur_topage_intersecte_pehm_tdbv_perm)
+  select(sta_id, longueur_topage_intersecte_pehm_tdbv_perm)
 
 ## Jointure des linéaires topages intersectés par bv ipr ----
 
@@ -538,7 +555,7 @@ bv_ipr <- bv_ipr %>%
   dplyr::left_join(lineaire_topage_pehm_perm_ipr) %>%
   dplyr::left_join(lineaire_topage_pehm_tdbv_perm_ipr)
 
-sf::write_sf(obj = bv_ipr, dsn = "data/outputs/bv_ipr_20231201.gpkg")
+sf::write_sf(obj = bv_ipr, dsn = "data/outputs/bv_ipr_20240605.gpkg")
 
 # Calcul des surfaces cumulées de ZHP ----
 
@@ -573,29 +590,9 @@ sf::write_sf(obj = bv_me_decoup, dsn = "data/outputs/bv_me_decoup_20240117.gpkg"
 
 ## Calcul des surfaces cumulées de ZHP hors marais par me ---- 
 
-zhp24_hm <- zhp24 %>% 
-  st_difference(zhp24, marais) %>% 
-  mutate(surface_intersect = st_area(.))
-
-zhp28_hm <- zhp28 %>% 
-  st_difference(zhp24, marais) %>% 
-  mutate(surface_intersect = st_area(.))
-
-zhp52_hm <- zhp52 %>% 
-  st_difference(zhp24, marais) %>% 
-  mutate(surface_intersect = st_area(.))
-
-zhp53_hm <- zhp53 %>% 
-  st_difference(zhp24, marais) %>% 
-  mutate(surface_intersect = st_area(.))
-
-zhp75_hm <- zhp75 %>% 
-  st_difference(zhp24, marais) %>% 
-  mutate(surface_intersect = st_area(.))
-
 zhphm_tot <-
   dplyr::bind_rows(
-    zhp24_hm, zhp28_hm, zhp53_hm, zhp52_hm, zhp75_hm)
+    zhp24_hm, zhp28_hm, zhphm_53, zhp52_hm, zhphm_75)
 
 sf::write_sf(obj = zhphm_tot, dsn = "data/outputs/zhphm_tot_20240220.gpkg")
 
@@ -615,8 +612,11 @@ surf_zhphm_me <-
     var_somme_surfaces = surf_zhphm) %>%
   select(-nb_zhphm)
 
+surf_zhphm_me <- surf_zhphm_me %>%
+  st_drop_geometry()
+
 bv_me_decoup <- bv_me_decoup %>%
-  dplyr::left_join(surf_zhphm_me) %>%
+  dplyr::left_join(surf_zhphm_me, join_by(cdeumassed == cdeumassed)) %>%
   units::drop_units()
 
 sf::write_sf(obj = bv_me_decoup, dsn = "data/outputs/bv_me_qualifies_20240220.gpkg")
@@ -640,6 +640,8 @@ surf_zhp_com <-
     var_somme_surfaces = surf_zhp) %>%
   select(-nb_zhp)
 
+
+
 communes <- communes %>%
   dplyr::left_join(surf_zhp_com) %>%
   units::drop_units()
@@ -650,7 +652,8 @@ sf::write_sf(obj = communes, dsn = "data/outputs/communes_20240117.gpkg")
 
 zhphm_decoup_com <- zhphm_tot %>% 
   st_intersection(communes) %>% 
-  mutate(surface_intersect = st_area(.)) 
+  mutate(surface_intersect = st_area(.)) %>%
+  st_drop_geometry()
 
 sf::write_sf(obj = zhphm_decoup_com, dsn = "data/outputs/zhphm_decoup_com_20240220.gpkg")
 
@@ -662,10 +665,11 @@ surf_zhphm_com <-
     var_a_sommer = surface_intersect,
     var_nb_objets = nb_zhphm,
     var_somme_surfaces = surf_zhphm) %>%
-  select(-nb_zhphm)
+  select(-nb_zhphm) %>%
+  st_drop_geometry()
 
 communes <- communes %>%
-  dplyr::left_join(surf_zhphm_me) %>%
+  dplyr::left_join(surf_zhphm_com, join_by(code_insee == code_insee)) %>%
   units::drop_units()
 
 sf::write_sf(obj = communes, dsn = "data/outputs/communes_qualifiees_20240220.gpkg")
@@ -702,13 +706,13 @@ zhp_decoup_ipr <- zhp_tot %>%
   mutate(surface_intersect = st_area(.)) %>% # superficie des intersects
   st_drop_geometry()
 
-sf::write_sf(obj = zhp_decoup_ipr, dsn = "data/outputs/zhp_decoup_ipr_20240117.gpkg")
+sf::write_sf(obj = zhp_decoup_ipr, dsn = "data/outputs/zhp_decoup_ipr_20240605.gpkg")
 
 surf_zhp_ipr <-
   compter_sommer_simple_surfaces_dans_polygone(
     couche_surface = zhp_decoup_ipr %>% 
       units::drop_units(),
-    var_id_polygone = sta_code_sandre,
+    var_id_polygone = sta_id,
     var_a_sommer = surface_intersect,
     var_nb_objets = nb_zhp,
     var_somme_surfaces = surf_zhp) %>%
@@ -718,7 +722,36 @@ bv_ipr <- bv_ipr %>%
   dplyr::left_join(surf_zhp_ipr) %>%
   units::drop_units()
 
-sf::write_sf(obj = bv_ipr, dsn = "data/outputs/bv_ipr_20240117.gpkg")
+sf::write_sf(obj = bv_ipr, dsn = "data/outputs/bv_ipr_20240605.gpkg")
+
+## XXX Calcul des surfaces cumulées de ZHP hors marais par BV IPR ----
+
+zhphm_decoup_ipr <- zhphm_tot %>% 
+  st_intersection(bv_ipr) %>% 
+  mutate(surface_intersect = st_area(.)) %>%
+  st_drop_geometry()
+
+#ICI
+
+sf::write_sf(obj = zhphm_decoup_ipr, dsn = "data/outputs/zhphm_decoup_ipr_20240605.gpkg")
+
+surf_zhphm_ipr <-
+  compter_sommer_simple_surfaces_dans_polygone(
+    couche_surface = zhphm_decoup_ipr %>% 
+      units::drop_units(),
+    var_id_polygone = sta_id,
+    var_a_sommer = surface_intersect,
+    var_nb_objets = nb_zhphm,
+    var_somme_surfaces = surf_zhphm) %>%
+  select(-nb_zhphm) %>%
+  st_drop_geometry()
+
+bv_ipr <- bv_ipr %>%
+  dplyr::left_join(surf_zhphm_ipr, join_by(sta_id == sta_id)) %>%
+  units::drop_units()
+
+sf::write_sf(obj = bv_ipr, dsn = "data/outputs/bv_ipr_20240605.gpkg")
+
 
 # Calcul des surfaces de zones de marais ----
 
@@ -3128,6 +3161,23 @@ regions <- regions %>%
 sf::write_sf(obj = regions, dsn = "data/outputs/regions_20231202.gpkg")
 
 # Sauvegarde des résultats
+
+save(bv_ipr,
+     ce_decoup_ipr,
+     ce_tdbv_decoup_ipr,
+     ce_topage,
+     ce_topage_ipr,
+     cehm_topage,
+     lineaire_topage_pe,
+     lineaire_topage_pe_ipr,
+     pe,
+     zhp_decoup_ipr,
+     zhphm_decoup_ipr,
+     file = "data/outputs/w_ipr.RData")
+
+## Charger ---- 
+load(file = "data/outputs/w_ipr.RData") 
+
 
 save(ce_topage_me,
      ce_topage_sage,
