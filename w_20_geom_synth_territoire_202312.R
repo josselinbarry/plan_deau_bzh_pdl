@@ -285,6 +285,32 @@ ce_tdbv_decoup_ipr <- ce_topage_ipr %>%
   summarise(longueur_ce_tdbv_topage = sum(longueur_intersect)) %>%
   select(sta_id, longueur_ce_tdbv_topage)
 
+cehm_topage_ipr <- cehm_topage %>% 
+  st_intersection(bv_ipr) %>% # découpage des ce selon les masses d'eau
+  mutate(longueur_intersect = st_length(.)) %>% # longueur des intersects
+  st_drop_geometry()
+
+long_cehm_ipr <-
+  compter_sommer_simple_surfaces_dans_polygone(
+    couche_surface = cehm_topage_ipr %>% 
+      units::drop_units(),
+    var_id_polygone = sta_id,
+    var_a_sommer = longueur_intersect,
+    var_nb_objets = nb_cehm,
+    var_somme_surfaces = longueur_cehm_topage) %>%
+  select(-nb_cehm)
+
+long_cehm_tdbv_ipr <-
+  compter_sommer_simple_surfaces_dans_polygone(
+    couche_surface = cehm_topage_ipr %>% 
+      filter(StreamOrde== 1 | StreamOrde == 2) %>%
+      units::drop_units(),
+    var_id_polygone = sta_id,
+    var_a_sommer = longueur_intersect,
+    var_nb_objets = nb_cehm_tdbv,
+    var_somme_surfaces = longueur_cehm_tdbv_topage) %>%
+  select(-nb_cehm_tdbv)
+
 ## Jointure des linéaires topages par objet ----
 
 bv_me_decoup <- bv_me_decoup %>%
@@ -308,12 +334,16 @@ communes <- communes %>%
 sf::write_sf(obj = communes, dsn = "data/outputs/communes_qualifiees_20240225.gpkg")
 
 bv_ipr <- bv_ipr %>%
-  dplyr::left_join(ce_decoup_ipr %>%
+#  dplyr::left_join(ce_decoup_ipr %>%
+#                     st_drop_geometry()) %>%
+#  dplyr::left_join(ce_tdbv_decoup_ipr %>%
+#                     st_drop_geometry()) %>%
+  dplyr::left_join(long_cehm_ipr %>%
                      st_drop_geometry()) %>%
-  dplyr::left_join(ce_tdbv_decoup_ipr %>%
-                     st_drop_geometry()) 
+  dplyr::left_join(long_cehm_tdbv_ipr%>%
+                     st_drop_geometry())
 
-sf::write_sf(obj = bv_ipr, dsn = "data/outputs/bv_stat_ipr_20240605.gpkg")
+sf::write_sf(obj = bv_ipr, dsn = "data/outputs/bv_stat_ipr_20240610.gpkg")
 
 # Calcul des linéaires topages intersectés ----
 
