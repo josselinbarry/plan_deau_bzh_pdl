@@ -105,7 +105,6 @@ Les couches de territoires retenues sont les suivantes :
     -	**nb_mareshm_perm** et **surf_mareshm_perm** : décompte et somme des surfaces des mares permanentes (hors marais)
     -	**nb_mareshm_zhp_tot** et **surf_mareshm_zhp_tot** : décompte et somme des surfaces des mares en zone humide probable (hors marais)
     -	**nb_mareshm_zhp_perm** et **surf_mareshm_zhp_perm** : décompte et somme des surfaces des mares permanentes en zone humide probable (hors marais)
-    - **prel__2008_ret** à **prel__2019_tot** : somme des volumes des prélèvements situés à 20m maximum d'un plan d'eau, respectivement en retenue et totaux
     
 - Une partie de ce script permet de synthétiser les variables des couches de débit :
     -	**QAMOY_max** (L/s) : module maximal rencontré sur l'entité
@@ -124,7 +123,7 @@ Les couches de territoires retenues sont les suivantes :
     - w_40_statistique_ME_IPR_202401.R
     - w_50_statistique_ME_score_IPR_202401.R
 
-- **Lien entre BV Masse d'eau et indicateurs de thermie**
+- **Lien entre BV Masse d'eau et indicateurs de thermie TIGRE**
     A FAIRE
     
 - **Lien entre BV Masse d'eau et indicateurs IPR**
@@ -133,7 +132,8 @@ Les couches de territoires retenues sont les suivantes :
     - w_51_exploit_statistique_ME_score_IPR.R
 
 - **Lien entre BV Station piscicole et indicateurs IPR**
-    EN COURS
+    - w_60_statistique_BV_IPR.R
+    - w_61_exploit_statistique_BV_IPR.R
     
 - **Lien entre BV Station Onde et indicateurs Onde**
     A FAIRE
