@@ -23,6 +23,12 @@ bv_score_ipr <-
   sf::read_sf(dsn = "data/outputs/bv_ipr_20240610.gpkg")
 
 
+## Filtre éventuel des résultats pour ajuster un échantillon plus cohérent ---
+#On test ici les BV dont le rang de strahler est inf ou égale à 4
+
+bv_score_ipr <- bv_score_ipr %>%
+  filter(strahler_max <= 3)
+
 ## Calcul des indicateurs densite, prct ----
 
 bv_score_ipr <- bv_score_ipr  %>%
@@ -86,12 +92,6 @@ bv_score_ipr <- bv_score_ipr  %>%
          dii,
          dti, 
          ipr) %>%
-  st_drop_geometry()
-
-## Filtre des résultats XXX---
-
-#bv_score_ipr_vf <- bv_score_ipr %>%
-  filter( !is.na(surface_moy_pe_perm) & !is.na(prct_intercept)) %>%
   st_drop_geometry()
 
 ## Loguer les variables quantitatives nécessaires (ou log(x+1) si inf) ----
@@ -234,7 +234,7 @@ stat_corr_bv_ipr <- bv_score_ipr_log2 %>%
   left_join(y = df_densite_zhp_zhp_synth_ipr) %>%
   left_join((y = df_densite_connect_synth_ipr))
   
-save(stat_corr_bv_ipr, file = "data_processed/w_pe_bv_ipr_stat_vf_1.RData")
+save(stat_corr_bv_ipr, file = "data_processed/w_pe_bv_ipr_stat_vf_test2.RData")
 
 # test
 
