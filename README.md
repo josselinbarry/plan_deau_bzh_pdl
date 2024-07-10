@@ -22,7 +22,7 @@ En second lieu, étudier les liens de corrélation entre ces variables d’impla
 
 Création et renseignement des attributs suivants :
     -	**bassin_orage** (0/1) : "NatureSE" = 'PE-réservoir-bassinorage'
-    -	**bassin_eru** (0/1) : "coef_gravelius" < 1,015 and "NatureSE" not in ('Plan d''eau - mare', 'PE-réservoir-bassinorage', 'PE - réservoir -piscicult', 'Ecoulement naturel')
+    -	**bassin_eru** (0/1) : "coef_gravelius" < 1.015 and "NatureSE" not in ('Plan d''eau - mare', 'PE-réservoir-bassinorage', 'PE - réservoir -piscicult', 'Ecoulement naturel')
     -	**a_retirer** (0/1) : filtre des surfaces qui ne sont ni des écoulements naturels, ni des zones estuariennes, ni des zones de marais UHC1, ni des bassins d’orage, ni des bassins ERU
 
 **Création de la couche Plan d'Eau à partir des entités de la couche surfaces élémentaires filtrées précedemment.**
